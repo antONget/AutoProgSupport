@@ -90,7 +90,11 @@ async def get_id_tg_personal(message: Message, state: FSMContext, bot: Bot):
     :param bot:
     :return:
     """
-    tg_id_personal = int(message.text)
+    if message.text.isdigit():
+        tg_id_personal = int(message.text)
+    else:
+        await message.answer(text='id пользователя должно состоять только из цифр, например 6632926430')
+        return
     data = await state.get_data()
     edit_role = data['edit_role']
     role = 'партнеров'

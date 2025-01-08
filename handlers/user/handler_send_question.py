@@ -165,7 +165,7 @@ async def mailing_list_partner(callback: CallbackQuery, list_partner: list, ques
             # получаем информацию о вопросе
             question: Question = await rq.get_question_id(question_id=question_id)
             # если вопрос не находится в работе или не завершен, то предлагаем повторно взять заказ
-            if question.status != rq.QuestionStatus.work or question.status != rq.QuestionStatus.completed:
+            if question.status == rq.QuestionStatus.create or question.status == rq.QuestionStatus.cancel:
                 await bot.delete_message(chat_id=partner.tg_id,
                                          message_id=msg_1.message_id)
                 text_2 = f"Напоминаю, что вопрос № {question_id} поступил от пользователя" \
@@ -180,7 +180,7 @@ async def mailing_list_partner(callback: CallbackQuery, list_partner: list, ques
                 # получаем информацию о вопросе
                 question: Question = await rq.get_question_id(question_id=question_id)
                 # если вопрос не находится в работе или не завершен, то предлагаем повторно взять заказ
-                if question.status != rq.QuestionStatus.work or question.status != rq.QuestionStatus.completed:
+                if question.status == rq.QuestionStatus.create or question.status == rq.QuestionStatus.cancel:
                     await bot.delete_message(chat_id=partner.tg_id,
                                              message_id=msg_2.message_id)
                     text_3 = f"Последняя возможность взять вопрос № {question_id} поступивший от пользователя" \
@@ -195,7 +195,7 @@ async def mailing_list_partner(callback: CallbackQuery, list_partner: list, ques
                     # получаем информацию о вопросе
                     question: Question = await rq.get_question_id(question_id=question_id)
                     # если вопрос не находится в работе или не завершен, то предлагаем повторно взять заказ
-                    if question.status != rq.QuestionStatus.work or question.status != rq.QuestionStatus.completed:
+                    if question.status == rq.QuestionStatus.create or question.status == rq.QuestionStatus.cancel:
                         await bot.delete_message(chat_id=partner.tg_id,
                                                  message_id=msg_3.message_id)
                     else:
