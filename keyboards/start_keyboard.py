@@ -13,7 +13,7 @@ def keyboard_start(role: str) -> ReplyKeyboardMarkup:
     keyboard = ''
     if role == UserRole.user:
         button_1 = KeyboardButton(text='Тарифы')
-        button_2 = KeyboardButton(text='Мой тариф')
+        button_2 = KeyboardButton(text='Задать вопрос')
         keyboard = ReplyKeyboardMarkup(keyboard=[[button_1], [button_2]], resize_keyboard=True)
     elif role == UserRole.admin:
         button_1 = KeyboardButton(text='Партнеры')

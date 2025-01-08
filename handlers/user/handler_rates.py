@@ -52,11 +52,11 @@ async def select_rate(callback: CallbackQuery, bot: Bot):
     payment_url, payment_id = create_payment_yookassa(amount=rate_info.amount_rate,
                                                       chat_id=callback.from_user.id,
                                                       content=rate_info.title_rate)
-    await callback.message.answer(text=f'Оплатите доступ к боту согласно выбранного тарифа',
-                                  reply_markup=kb.keyboard_payment(payment_url=payment_url,
-                                                                   payment_id=payment_id,
-                                                                   amount=rate_info.amount_rate,
-                                                                   rate_id=rate_id))
+    await callback.message.edit_text(text=f'Оплатите доступ к боту согласно выбранного тарифа',
+                                     reply_markup=kb.keyboard_payment(payment_url=payment_url,
+                                                                      payment_id=payment_id,
+                                                                      amount=rate_info.amount_rate,
+                                                                      rate_id=rate_id))
     await callback.answer()
 
 
@@ -94,7 +94,7 @@ async def check_pay(callback: CallbackQuery, state: FSMContext, bot: Bot):
                                            f'<b>Количество вопросов:</b> 0/{rate_info.question_rate}',
                                       reply_markup=kb.keyboard_send_question())
     else:
-        await callback.message.answer(text=f'Платеж не подтвержден, если вы совершили платеж, то попробуйте проверить'
-                                           f' его немного позднее или обратитесь в '
-                                           f'<a href="tg://user?id={config.tg_bot.support_id}">Поддержку</a>')
+        await callback.answer(text=f'Платеж не подтвержден, если вы совершили платеж, то попробуйте проверить'
+                                   f' его немного позднее или обратитесь в "Поддержку"',
+                              show_alert=True)
     await callback.answer()

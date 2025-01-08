@@ -15,7 +15,7 @@ router = Router()
 
 
 # Персонал
-@router.message(F.text == 'Мой тариф')
+@router.message(F.text == 'Задать вопрос')
 @error_handler
 async def press_button_my_rate(message: Message, bot: Bot) -> None:
     """
@@ -39,7 +39,9 @@ async def press_button_my_rate(message: Message, bot: Bot) -> None:
             active_subscribe = True
     # если нет подписок или подписки не активны
     if not subscribes or not active_subscribe:
-        await message.answer(text=f'У вас нет активных подписок')
+        list_rate: list[Rate] = await rq.get_list_rate()
+        await message.answer(text=f'У вас нет активных подписок. Выберите подходящий тариф!',
+                             reply_markup=kb.keyboards_select_rate(list_rate=list_rate))
     else:
         last_subscribe: Subscribe = subscribes[-1]
         rate_info: Rate = await rq.get_rate_id(rate_id=last_subscribe.rate_id)

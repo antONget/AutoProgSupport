@@ -50,7 +50,8 @@ async def send_question(callback: CallbackQuery, state: FSMContext, bot: Bot):
     if not subscribes or not active_subscribe:
         await callback.message.answer(text=f'Действие вашей подписки завершено, продлите подписку')
     else:
-        await callback.message.answer(text='Пришлите описание вашей проблемы, можете добавить фото 📎 .')
+        await callback.message.edit_text(text='Пришлите описание вашей проблемы, можете добавить фото 📎 .',
+                                         reply_markup=None)
         await state.set_state(QuestionState.question)
         await state.update_data(content=[])
         await state.update_data(count=[])
@@ -142,15 +143,17 @@ async def mailing_list_partner(callback: CallbackQuery, list_partner: list, ques
     :param bot:
     :return:
     """
+    logging.info(mailing_list_partner)
     if list_partner:
         for partner in list_partner:
             # получаем информацию о вопросе
             question: Question = await rq.get_question_id(question_id=question_id)
+            user: User = await rq.get_user_by_id(tg_id=question.tg_id)
             list_partner_question = question.partner_list.split(',')
-            if str(partner) in list_partner_question:
+            if str(partner.tg_id) in list_partner_question:
                 continue
-            text_1 = f"Поступил вопрос № {question_id} от пользователя <a href='tg://user?id={callback.from_user.id}'>" \
-                     f"{callback.from_user.full_name}</a>"
+            text_1 = f"Поступил вопрос № {question_id} от пользователя <a href='tg://user?id={question.tg_id}'>" \
+                     f"{user.username}</a>"
             # добавляем партнера в список рассылки вопроса
             await rq.set_question_partner(question_id=question_id, partner_tg_id=partner.tg_id)
 
@@ -166,8 +169,8 @@ async def mailing_list_partner(callback: CallbackQuery, list_partner: list, ques
                 await bot.delete_message(chat_id=partner.tg_id,
                                          message_id=msg_1.message_id)
                 text_2 = f"Напоминаю, что вопрос № {question_id} поступил от пользователя" \
-                         f" <a href='tg://user?id={callback.from_user.id}'>" \
-                         f"{callback.from_user.full_name}</a>"
+                         f" <a href='tg://user?id={question.tg_id}'>" \
+                         f"{user.username}</a>"
                 msg_2 = await create_post_content(question=question, partner=partner, id_question=question_id,
                                                   text=text_2,
                                                   bot=bot)
@@ -181,8 +184,8 @@ async def mailing_list_partner(callback: CallbackQuery, list_partner: list, ques
                     await bot.delete_message(chat_id=partner.tg_id,
                                              message_id=msg_2.message_id)
                     text_3 = f"Последняя возможность взять вопрос № {question_id} поступивший от пользователя" \
-                             f" <a href='tg://user?id={callback.from_user.id}'>" \
-                             f"{callback.from_user.full_name}</a>"
+                             f" <a href='tg://user?id={question.tg_id}'>" \
+                             f"{user.username}</a>"
                     msg_3 = await create_post_content(question=question, partner=partner, id_question=question_id,
                                                       text=text_3,
                                                       bot=bot)
@@ -215,7 +218,7 @@ async def send_add_content(callback: CallbackQuery, state: FSMContext, bot: Bot)
     """
     logging.info(f'send_add_content {callback.message.chat.id}')
     answer = callback.data.split('_')[0]
-
+    await callback.answer()
     if answer == 'add':
         await state.set_state(QuestionState.question)
         await state.update_data(count=[])
@@ -233,4 +236,3 @@ async def send_add_content(callback: CallbackQuery, state: FSMContext, bot: Bot)
         id_question: int = await rq.add_question(data=data_question)
         list_partner: list[User] = await rq.get_users_role(role=rq.UserRole.partner)
         await mailing_list_partner(callback=callback, list_partner=list_partner, question_id=id_question, bot=bot)
-    await callback.answer()

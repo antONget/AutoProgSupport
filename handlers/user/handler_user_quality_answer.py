@@ -42,7 +42,7 @@ async def quality_answer_question(callback: CallbackQuery, state: FSMContext, bo
                                          reply_markup=None)
         text_quality = '⭐' * quality
         await bot.send_message(chat_id=question.partner_solution,
-                               text=f"Пользователь <a href='tg://user?id={question.tg_id}'>{user.username}</a>"
+                               text=f"Пользователь <a href='tg://user?id={question.tg_id}'>{user.username}</a> "
                                     f"оценил вашу помощь на вопрос №{question.id} на {text_quality}")
     else:
         await callback.message.edit_text(text='Благодарим за обратную связь, постараемся решить вашу проблему!',
