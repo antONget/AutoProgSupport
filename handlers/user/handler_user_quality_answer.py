@@ -67,7 +67,7 @@ async def quality_answer_question(callback: CallbackQuery, state: FSMContext, bo
         partner: User = await rq.get_user_by_id(tg_id=question.partner_solution)
         await send_message_admins(bot=bot, text=f"Пользователь "
                                                 f"<a href='tg://user?id={question.tg_id}'>{info_user.username}</a>"
-                                                f"указал, что вопрос №{question.id} не решен партнером "
+                                                f" указал, что вопрос №{question.id} не решен партнером "
                                                 f"<a href='tg://user?id={question.partner_solution}'>"
                                                 f"{partner.username}</a>")
     await callback.answer()

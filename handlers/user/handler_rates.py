@@ -53,7 +53,7 @@ async def select_rate(callback: CallbackQuery, bot: Bot):
     payment_url, payment_id = create_payment_yookassa(amount=rate_info.amount_rate,
                                                       chat_id=callback.from_user.id,
                                                       content=rate_info.title_rate)
-    await callback.message.edit_text(text=f'Оплатите доступ к боту согласно выбранного тарифа и нажмите "Задать вопрос"',
+    await callback.message.edit_text(text=f'Оплатите доступ к боту согласно выбранного тарифа и нажмите "Продолжить"',
                                      reply_markup=kb.keyboard_payment(payment_url=payment_url,
                                                                       payment_id=payment_id,
                                                                       amount=rate_info.amount_rate,

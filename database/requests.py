@@ -1,5 +1,5 @@
 from database.models import User, async_session, Subscribe, Rate, Question, Executor, Dialog
-from sqlalchemy import select
+from sqlalchemy import select, or_, and_
 import logging
 from dataclasses import dataclass
 from datetime import datetime
@@ -425,6 +425,12 @@ async def del_executor(question_id: int, tg_id: int) -> None:
 """ DIALOG """
 
 
+@dataclass
+class StatusDialog:
+    active = 'active'
+    completed = 'completed'
+
+
 async def add_dialog(data: dict) -> None:
     """
     Добавление нового диалога между пользователем и партнером для обсуждения вопроса
@@ -438,4 +444,33 @@ async def add_dialog(data: dict) -> None:
         if not dialog:
             new_dialog = Dialog(**data)
             session.add(new_dialog)
+            await session.commit()
+
+
+async def get_dialog_active_tg_id(tg_id: int) -> Dialog:
+    """
+    Получаем активный диалог пользователя
+    :param tg_id:
+    :return:
+    """
+    logging.info('set_question_quality')
+    async with async_session() as session:
+        return await session.scalar(select(Dialog).filter(and_(or_(Dialog.tg_id_user == tg_id,
+                                                                   Dialog.tg_id_partner == tg_id),
+                                                          Dialog.status == StatusDialog.active)))
+
+
+async def set_dialog_completed_tg_id(tg_id: int) -> None:
+    """
+    Закрываем диалог
+    :param tg_id:
+    :return:
+    """
+    logging.info('set_question_quality')
+    async with async_session() as session:
+        dialog = await session.scalar(select(Dialog).filter(and_(or_(Dialog.tg_id_user == tg_id,
+                                                                     Dialog.tg_id_partner == tg_id),
+                                                            Dialog.status == StatusDialog.active)))
+        if dialog:
+            dialog.status = StatusDialog.completed
             await session.commit()

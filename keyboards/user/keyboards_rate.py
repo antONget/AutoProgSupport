@@ -33,7 +33,7 @@ def keyboard_payment(payment_url: str, payment_id: int, amount: str, rate_id: st
     :return:
     """
     logging.info("keyboard_payment")
-    button_1 = InlineKeyboardButton(text='Задать вопрос', callback_data=f'payment_{rate_id}_{payment_id}')
+    button_1 = InlineKeyboardButton(text='Продолжить', callback_data=f'payment_{rate_id}_{payment_id}')
     button_2 = InlineKeyboardButton(text=f'Оплатить {amount} руб.', url=payment_url)
     keyboard = InlineKeyboardMarkup(inline_keyboard=[[button_2], [button_1]],)
     return keyboard

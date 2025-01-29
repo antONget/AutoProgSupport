@@ -6,7 +6,7 @@ from aiogram.filters import StateFilter, or_f
 
 import keyboards.user.keyboard_send_question as kb
 import database.requests as rq
-from database.models import User, Rate, Subscribe, Question
+from database.models import User, Rate, Subscribe, Question, Dialog
 from utils.error_handling import error_handler
 
 from config_data.config import Config, load_config
@@ -35,6 +35,11 @@ async def send_question(callback: CallbackQuery, state: FSMContext, bot: Bot):
     :return:
     """
     logging.info('send_question')
+    info_dialog: Dialog = await rq.get_dialog_active_tg_id(tg_id=callback.from_user.id)
+    if info_dialog:
+        await callback.answer('В данный момент у вас есть один не закрытый диалог для его закрытия введите команду'
+                              ' /close_dialog')
+        return
     # проверка на наличие активной подписки
     subscribes: list[Subscribe] = await rq.get_subscribes_user(tg_id=callback.from_user.id)
     active_subscribe = False
@@ -103,6 +108,7 @@ async def request_content_photo_text(message: Message, state: FSMContext, bot: B
             await state.update_data(task=task)
         await state.update_data(content=content)
     elif message.document:
+        logging.info(f'{message.document.file_id}')
         content = f'file!{message.document.file_id}'
         task = data['task']
         if message.caption:
@@ -203,7 +209,10 @@ async def mailing_list_partner(callback: CallbackQuery, list_partner: list, ques
     logging.info('mailing_list_partner')
     if list_partner:
         for partner in list_partner:
-            # получаем информацию о вопросе
+            info_dialog: Dialog = await rq.get_dialog_active_tg_id(tg_id=partner.tg_id)
+            if info_dialog:
+                return
+                # получаем информацию о вопросе
             question: Question = await rq.get_question_id(question_id=question_id)
             user: User = await rq.get_user_by_id(tg_id=question.tg_id)
             # list_partner_question = question.partner_list.split(',')

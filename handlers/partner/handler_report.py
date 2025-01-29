@@ -5,6 +5,7 @@ from aiogram.fsm.state import State, StatesGroup, default_state
 from aiogram.filters import StateFilter
 from aiogram.filters.callback_data import CallbackData
 import aiogram_calendar
+from aiogram_calendar import get_user_locale
 
 
 from datetime import datetime, timedelta, date
@@ -19,6 +20,7 @@ router = Router()
 class StateReport(StatesGroup):
     start_period = State()
     finish_period = State()
+
 
 
 # календарь
