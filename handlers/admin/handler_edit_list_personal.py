@@ -76,7 +76,8 @@ async def process_personal_add(callback: CallbackQuery, state: FSMContext, bot: 
     await callback.message.edit_text(text=f'Пришлите id telegram пользователя для назначения его {role}.\n\n'
                                           f'Важно!!! Пользователь должен запустить бота.\n\n'
                                           f'Получить id telegram пользователя можно при помощи бота: '
-                                          f'@getmyid_bot или @username_to_id_bot')
+                                          f'@getmyid_bot или @username_to_id_bot',
+                                     reply_markup=None)
     await state.set_state(Personal.id_tg_personal)
 
 
