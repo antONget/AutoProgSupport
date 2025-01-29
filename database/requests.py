@@ -382,7 +382,7 @@ async def get_executor(question_id: int, tg_id: int) -> Executor:
                                                            Executor.tg_id == tg_id))
 
 
-async def get_executor_not(question_id: int, tg_id: int) -> Executor:
+async def get_executor_not(question_id: int, tg_id: int) -> list[Executor]:
     """
     Получаем исполнителей которых не выбрали для решения вопроса
     :param question_id:

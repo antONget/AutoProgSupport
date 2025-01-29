@@ -25,7 +25,7 @@ def keyboard_open_dialog_partner(id_question: str) -> InlineKeyboardMarkup:
     :param id_question:
     :return:
     """
-    logging.info("keyboard_payment")
+    logging.info("keyboard_open_dialog_partner")
     button_1 = InlineKeyboardButton(text='Написать специалисту', callback_data=f'open_dialog_partner_{id_question}')
     keyboard = InlineKeyboardMarkup(inline_keyboard=[[button_1]])
     return keyboard

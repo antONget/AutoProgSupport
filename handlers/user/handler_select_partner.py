@@ -52,9 +52,12 @@ async def process_selectpartner(callback: CallbackQuery, state: FSMContext, bot:
                                                                                     payment_id=payment_id,
                                                                                     amount=info_executor.cost,
                                                                                     id_question=id_question))
-    await bot.send_message(chat_id=tg_id_partner,
-                           text=f'Вас выбрал пользователь #_{info_user.id} для решения вопроса {id_question}')
-    executors: list[Executor] = await rq.get_executors(question_id=int(id_question))
+
+    await bot.edit_message_text(chat_id=tg_id_partner,
+                                message_id=info_executor.message_id,
+                                text=f'Вас выбрал пользователь #_{info_user.id} для решения вопроса {id_question}',
+                                reply_markup=None)
+    executors: list[Executor] = await rq.get_executor_not(question_id=int(id_question), tg_id=int(tg_id_partner))
     list_executors: list = [executor for executor in executors]
     for executor in list_executors:
         # try:

@@ -30,6 +30,8 @@ async def press_button_rate(message: Message, bot: Bot) -> None:
     """
     logging.info(f'press_button_rate: {message.chat.id}')
     list_rate: list[Rate] = await rq.get_list_rate()
+    await message.answer(text=f'В этом разделе вы можете ознакомиться с доступными тарифами',
+                         reply_markup=kb.keyboard_main_menu())
     await message.answer(text=f'Краткое описание тарифов! Например, Тариф - 1, вы можете задать 3 вопроса',
                          reply_markup=kb.keyboards_select_rate(list_rate=list_rate))
 
@@ -51,7 +53,7 @@ async def select_rate(callback: CallbackQuery, bot: Bot):
     payment_url, payment_id = create_payment_yookassa(amount=rate_info.amount_rate,
                                                       chat_id=callback.from_user.id,
                                                       content=rate_info.title_rate)
-    await callback.message.edit_text(text=f'Оплатите доступ к боту согласно выбранного тарифа',
+    await callback.message.edit_text(text=f'Оплатите доступ к боту согласно выбранного тарифа и нажмите "Задать вопрос"',
                                      reply_markup=kb.keyboard_payment(payment_url=payment_url,
                                                                       payment_id=payment_id,
                                                                       amount=rate_info.amount_rate,
