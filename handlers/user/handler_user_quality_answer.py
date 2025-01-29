@@ -120,5 +120,6 @@ async def pass_comment(callback: CallbackQuery, state: FSMContext, bot: Bot):
                            text=f"Пользователь #_{info_user.id} "
                                 f"оценил вашу помощь на вопрос № {info_question.id} на {text_quality}.\n"
                                 f"<i>Комментарий</i>: отсутствует")
-    await callback.message.answer(text='Ваша оценка передана специалисту, спасибо!')
+    await callback.message.edit_text(text='Ваша оценка передана специалисту, спасибо!',
+                                     reply_markup=None)
     await state.set_state(state=None)

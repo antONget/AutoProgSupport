@@ -40,9 +40,10 @@ async def open_dialog_user(callback: CallbackQuery, state: FSMContext, bot: Bot)
     await state.update_data(id_question=id_question)
     await state.set_state(StageSelectUser.dialog_user)
     info_user: User = await rq.get_user_by_id(tg_id=info_question.tg_id)
-    await callback.message.answer(text=f'Вы открыли диалог с пользователем #_{info_user.id},'
-                                       f' все ваши сообщения будут перенаправлены ему,'
-                                       f' для завершения диалога нажмите "Завершить диалог"',
+    await callback.message.edit_text(text=f'Вы открыли диалог с пользователем #_{info_user.id},'
+                                          f' все ваши сообщения будут перенаправлены ему,',
+                                     reply_markup=None)
+    await callback.message.answer(text=f' для завершения диалога нажмите "Завершить диалог"',
                                   reply_markup=kb.keyboard_finish_dialog())
     await callback.answer()
 

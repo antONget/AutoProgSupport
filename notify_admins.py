@@ -21,4 +21,5 @@ async def on_startup_notify(bot: Bot):
                         f"⏰Время: {time_now}")
                 await bot.send_message(chat_id=admin, text=text)
             except Exception as err:
-                logging.exception(err)
+                pass
+                # logging.exception(err)

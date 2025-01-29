@@ -23,7 +23,15 @@ class StateReport(StatesGroup):
 
 # календарь
 @router.message(F.text == 'Отчет')
-async def process_buttons_press_start(message: Message, state: FSMContext):
+async def process_buttons_press_report(message: Message, state: FSMContext):
+    """
+    Паздел отчет
+    :param message:
+    :param state:
+    :return:
+    """
+    logging.info('process_buttons_press_report')
+    await state.set_state(state=None)
     calendar = aiogram_calendar.SimpleCalendar(show_alerts=True)
     calendar.set_dates_range(datetime(2015, 1, 1), datetime(2050, 12, 31))
     # получаем текущую дату
@@ -88,18 +96,22 @@ async def process_simple_calendar_finish(callback: CallbackQuery, callback_data:
             text = ''
             total = 0
             for question in questions:
-                date_question = datetime(year=int(question.date_solution.split('-')[2].split()[0]),
-                                         month=int(question.date_solution.split('-')[1]),
-                                         day=int(question.date_solution.split('-')[0]))
-                if start_period <= date_question <= date_finish:
-                    list_questions.append(question)
-                    executor: Executor = await rq.get_executor(question_id=question.id,
-                                                               tg_id=question.partner_solution)
-                    info_user: User =await rq.get_user_by_id(tg_id=question.tg_id)
-                    info_partner: User = await rq.get_user_by_id(tg_id=question.partner_solution)
-                    text += f'Специалист #_{info_partner.id} оказал услугу № {question.id } пользователю #_{question.id}' \
-                            f' на сумму {executor.cost}\n'
-                    total += executor.cost
+                if question.date_solution:
+                    date_question = datetime(year=int(question.date_solution.split('-')[2].split()[0]),
+                                             month=int(question.date_solution.split('-')[1]),
+                                             day=int(question.date_solution.split('-')[0]))
+                    if start_period <= date_question <= date_finish:
+                        list_questions.append(question)
+                        executor: Executor = await rq.get_executor(question_id=question.id,
+                                                                   tg_id=question.partner_solution)
+                        info_user: User =await rq.get_user_by_id(tg_id=question.tg_id)
+                        info_partner: User = await rq.get_user_by_id(tg_id=question.partner_solution)
+                        text += f'Специалист #_{info_partner.id} оказал услугу № {question.id } пользователю #_{question.id}' \
+                                f' на сумму {executor.cost}\n'
+                        total += executor.cost
+            if text == '':
+                await callback.message.answer(text='Нет оказанных услуг за выбранный рериод')
+                return
             text += f'ИТОГО: {total}'
             await callback.message.answer(text=text)
         else:

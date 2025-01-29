@@ -91,6 +91,10 @@ async def get_id_tg_personal(message: Message, state: FSMContext, bot: Bot):
     :param bot:
     :return:
     """
+    if message.text in ['Отчет', 'Партнеры']:
+        await message.answer(text='Изменение списка партнеров прервано')
+        await state.set_state(state=None)
+        return
     if message.text.isdigit():
         tg_id_personal = int(message.text)
     else:
