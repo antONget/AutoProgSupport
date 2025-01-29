@@ -1,3 +1,5 @@
+import asyncio
+
 from aiogram import Router
 from aiogram.types import Message, CallbackQuery
 from aiogram.types import FSInputFile
@@ -31,4 +33,9 @@ async def all_message(message: Message) -> None:
     if message.text == '/get_DB':
         file_path = "database/db.sqlite3"
         await message.answer_document(FSInputFile(file_path))
+    else:
+        msg = await message.answer(text='Для того чтобы задать вопрос специалисту, откройте с ним диалог')
+        await message.delete()
+        await asyncio.sleep(5)
+        await msg.delete()
 

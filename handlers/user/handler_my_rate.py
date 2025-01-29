@@ -25,6 +25,8 @@ async def press_button_my_rate(message: Message, bot: Bot) -> None:
     :return:
     """
     logging.info(f'press_button_my_rate: {message.chat.id}')
+    await message.answer(text=f'В этом разделе вы можете задать вопрос специалистам',
+                         reply_markup=kb.keyboard_main_menu())
     # проверка на наличие активной подписки
     subscribes: list[Subscribe] = await rq.get_subscribes_user(tg_id=message.from_user.id)
     active_subscribe = False
