@@ -4,7 +4,6 @@ from aiogram.types import Message, CallbackQuery, ReplyKeyboardRemove, PreChecko
 from aiogram.fsm.context import FSMContext
 
 
-
 from keyboards import start_keyboard as kb
 from config_data.config import Config, load_config
 from database import requests as rq
@@ -86,3 +85,39 @@ async def process_start_command_user(message: Message, state: FSMContext, bot: B
     elif user.role == rq.UserRole.admin:
         await message.answer(text=f'Добро пожаловать! Вы являетесь АДМИНИСТРАТОРОМ проекта',
                              reply_markup=kb.keyboard_start(role=rq.UserRole.admin))
+    if await check_super_admin(telegram_id=message.from_user.id):
+        await message.answer(text=f'Изменить свою роль?',
+                             reply_markup=kb.keyboard_change_role_admin())
+
+
+@router.callback_query(F.data == 'change_role_admin')
+@error_handler
+async def change_role_admin(callback: CallbackQuery, state: FSMContext, bot: Bot):
+    """
+    Смена роли администратором
+    :param callback:
+    :param state:
+    :param bot:
+    :return:
+    """
+    logging.info('change_role_admin')
+    await callback.message.edit_text(text=f'Какую роль установить?',
+                                     reply_markup=kb.keyboard_select_role_admin())
+
+
+@router.callback_query(F.data.startswith('select_role_'))
+@error_handler
+async def change_role_admin_select_role(callback: CallbackQuery, state: FSMContext, bot: Bot):
+    """
+    Смена роли администратором на выбранную
+    :param callback:
+    :param state:
+    :param bot:
+    :return:
+    """
+    logging.info('change_role_admin_select_role')
+    select_role = callback.data.split('_')[-1]
+    await rq.set_user_role(tg_id=callback.from_user.id, role=select_role)
+    await callback.message.edit_text(text=f'Роль {select_role.upper()} успешно установлена',
+                                     reply_markup=None)
+    await process_start_command_user(message=callback.message, state=state, bot=bot)

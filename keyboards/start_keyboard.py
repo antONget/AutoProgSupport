@@ -30,3 +30,19 @@ def keyboard_send_question() -> InlineKeyboardMarkup:
     button_1 = InlineKeyboardButton(text='Задать вопрос', callback_data=f'send_question')
     keyboard = InlineKeyboardMarkup(inline_keyboard=[[button_1]],)
     return keyboard
+
+
+def keyboard_change_role_admin() -> InlineKeyboardMarkup:
+    logging.info("keyboard_change_role_admin")
+    button_1 = InlineKeyboardButton(text='Изменить', callback_data=f'change_role_admin')
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[[button_1]],)
+    return keyboard
+
+
+def keyboard_select_role_admin() -> InlineKeyboardMarkup:
+    logging.info("keyboard_select_role_admin")
+    button_1 = InlineKeyboardButton(text='Администратор', callback_data=f'select_role_admin')
+    button_2 = InlineKeyboardButton(text='Партнер', callback_data=f'select_role_partner')
+    button_3 = InlineKeyboardButton(text='Пользователь', callback_data=f'select_role_user')
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[[button_1], [button_2], [button_3]])
+    return keyboard
