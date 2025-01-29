@@ -14,7 +14,8 @@ class Base(AsyncAttrs, DeclarativeBase):
 
 class User(Base):
     __tablename__ = 'Users'
-    tg_id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    tg_id: Mapped[int] = mapped_column(BigInteger)
     username: Mapped[str] = mapped_column(String, nullable=True)
     role: Mapped[str] = mapped_column(String, default='user')
 
@@ -43,12 +44,31 @@ class Question(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     tg_id: Mapped[int] = mapped_column(BigInteger)
     description: Mapped[str] = mapped_column(String)
-    photos_id: Mapped[str] = mapped_column(String)
+    content_ids: Mapped[str] = mapped_column(String)
     status: Mapped[str] = mapped_column(String)
-    partner_list: Mapped[str] = mapped_column(String, default='')
     date_solution: Mapped[str] = mapped_column(String, default='')
     partner_solution: Mapped[int] = mapped_column(BigInteger, default=0)
     quality: Mapped[int] = mapped_column(BigInteger, default=-1)
+    comment: Mapped[str] = mapped_column(String, default='')
+
+
+class Executor(Base):
+    __tablename__ = 'executors'
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    tg_id: Mapped[int] = mapped_column(BigInteger)
+    message_id: Mapped[int] = mapped_column(Integer)
+    message_id_cost: Mapped[int] = mapped_column(Integer, default=0)
+    id_question: Mapped[int] = mapped_column(Integer)
+    cost: Mapped[int] = mapped_column(Integer)
+    status: Mapped[str] = mapped_column(String)
+
+
+class Dialog(Base):
+    __tablename__ = 'dialogs'
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    tg_id_user: Mapped[int] = mapped_column(BigInteger)
+    tg_id_partner: Mapped[int] = mapped_column(BigInteger)
+    id_question: Mapped[int] = mapped_column(Integer)
 
 
 async def async_main():

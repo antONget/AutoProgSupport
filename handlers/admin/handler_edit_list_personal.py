@@ -38,7 +38,7 @@ async def process_change_list_personal(message: Message, bot: Bot) -> None:
         await message.edit_text(text="Выберите роль которую вы хотите изменить.",
                                 reply_markup=kb.keyboard_select_role())
     except:
-        await message.answer(text="Выберите роль которую вы хотите изменить.",
+        await message.answer(text="Выбeрите роль которую вы хотите изменить.",
                              reply_markup=kb.keyboard_select_role())
 
 
@@ -98,52 +98,56 @@ async def get_id_tg_personal(message: Message, state: FSMContext, bot: Bot):
     data = await state.get_data()
     edit_role = data['edit_role']
     role = 'партнеров'
-    await rq.set_user_role(tg_id=tg_id_personal, role=edit_role)
     user: User = await rq.get_user_by_id(tg_id=tg_id_personal)
     if user:
+        await rq.set_user_role(tg_id=tg_id_personal, role=edit_role)
         await message.answer(text=f'Пользователь @{user.username} добавлен в список {role}')
+        await bot.send_message(chat_id=tg_id_personal,
+                               text='Вы назначены партнером в проекте, при необходимости перезапустите бота /start')
         await state.set_state(default_state)
     else:
-        await message.answer(text=f'Пользователь c id={tg_id_personal} в базе данных не найден')
+        await message.answer(text=f'Пользователь c id={tg_id_personal} в базе данных не найден. '
+                                  f'Для того чтобы назначить пользователя партнером он обязательно должен'
+                                  f' запустить бота')
     await state.set_state(default_state)
 
 
-@router.callback_query(F.data == 'not_add_personal_list')
-@error_handler
-async def process_not_add_admin_list(callback: CallbackQuery, bot: Bot) -> None:
-    """
-    Отмена назначение пользователя партнером
-    :param callback:
-    :param bot:
-    :return:
-    """
-    logging.info(f'process_not_add_admin_list: {callback.message.chat.id}')
-    await bot.delete_message(chat_id=callback.message.chat.id,
-                             message_id=callback.message.message_id)
-    await process_change_list_personal(message=callback.message, bot=bot)
-
-
-@router.callback_query(F.data == 'add_personal_list')
-@error_handler
-async def process_add_admin_list(callback: CallbackQuery, state: FSMContext, bot: Bot) -> None:
-    """
-    Подтверждение назначение партнера
-    :param callback:
-    :param state:
-    :param bot:
-    :return:
-    """
-    logging.info(f'process_add_admin_list: {callback.message.chat.id}')
-    await bot.delete_message(chat_id=callback.message.chat.id,
-                             message_id=callback.message.message_id)
-    data = await state.get_data()
-    edit_role = data['edit_role']
-    tg_id = data['add_personal']
-    role = 'партнером'
-    await rq.set_user_role(tg_id=tg_id, role=edit_role)
-    await callback.answer(text=f'Пользователь успешно назначен {role}', show_alert=True)
-    await asyncio.sleep(1)
-    await process_change_list_personal(message=callback.message, bot=bot)
+# @router.callback_query(F.data == 'not_add_personal_list')
+# @error_handler
+# async def process_not_add_admin_list(callback: CallbackQuery, bot: Bot) -> None:
+#     """
+#     Отмена назначение пользователя партнером
+#     :param callback:
+#     :param bot:
+#     :return:
+#     """
+#     logging.info(f'process_not_add_admin_list: {callback.message.chat.id}')
+#     await bot.delete_message(chat_id=callback.message.chat.id,
+#                              message_id=callback.message.message_id)
+#     await process_change_list_personal(message=callback.message, bot=bot)
+#
+#
+# @router.callback_query(F.data == 'add_personal_list')
+# @error_handler
+# async def process_add_admin_list(callback: CallbackQuery, state: FSMContext, bot: Bot) -> None:
+#     """
+#     Подтверждение назначение партнера
+#     :param callback:
+#     :param state:
+#     :param bot:
+#     :return:
+#     """
+#     logging.info(f'process_add_admin_list: {callback.message.chat.id}')
+#     await bot.delete_message(chat_id=callback.message.chat.id,
+#                              message_id=callback.message.message_id)
+#     data = await state.get_data()
+#     edit_role = data['edit_role']
+#     tg_id = data['add_personal']
+#     role = 'партнером'
+#     await rq.set_user_role(tg_id=tg_id, role=edit_role)
+#     await callback.answer(text=f'Пользователь успешно назначен {role}', show_alert=True)
+#     await asyncio.sleep(1)
+#     await process_change_list_personal(message=callback.message, bot=bot)
 
 
 @router.callback_query(F.data == 'personal_delete')
@@ -262,6 +266,7 @@ async def process_not_del_personal_list(callback: CallbackQuery, bot: Bot) -> No
     logging.info(f'process_not_del_personal_list: {callback.message.chat.id}')
     await bot.delete_message(chat_id=callback.message.chat.id,
                              message_id=callback.message.message_id)
+    await callback.answer(text=f'Разжалование пользователя отменено', show_alert=True)
     await process_change_list_personal(message=callback.message, bot=bot)
 
 

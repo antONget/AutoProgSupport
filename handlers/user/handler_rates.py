@@ -19,7 +19,6 @@ config: Config = load_config()
 router = Router()
 
 
-# Персонал
 @router.message(F.text == 'Тарифы')
 @error_handler
 async def press_button_rate(message: Message, bot: Bot) -> None:
@@ -90,7 +89,7 @@ async def check_pay(callback: CallbackQuery, state: FSMContext, bot: Bot):
         await rq.add_subscribe(data=data_subscribe)
         await callback.message.answer(text=f'Добро пожаловать, {callback.from_user.username}!\n\n'
                                            f'<b>Ваш тариф:</b> {rate_info.title_rate}\n'
-                                           f'<b>Срок подписки:</b> {date_completion_str}'
+                                           f'<b>Срок подписки:</b> {date_completion_str}\n'
                                            f'<b>Количество вопросов:</b> 0/{rate_info.question_rate}',
                                       reply_markup=kb.keyboard_send_question())
     else:

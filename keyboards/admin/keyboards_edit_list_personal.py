@@ -75,18 +75,18 @@ def keyboards_add_partner(list_admin, back, forward, count) -> InlineKeyboardMar
     return kb_builder.as_markup()
 
 
-def keyboard_add_list_personal() -> InlineKeyboardMarkup:
-    """
-    Клавиатура для подтверждения добавления пользователя в список персонала
-    :return:
-    """
-    logging.info('keyboard_add_list_personal')
-    button_1 = InlineKeyboardButton(text='Назначить',
-                                    callback_data='add_personal_list')
-    button_2 = InlineKeyboardButton(text='Отменить',
-                                    callback_data='not_add_personal_list')
-    keyboard = InlineKeyboardMarkup(inline_keyboard=[[button_1, button_2]])
-    return keyboard
+# def keyboard_add_list_personal() -> InlineKeyboardMarkup:
+#     """
+#     Клавиатура для подтверждения добавления пользователя в список персонала
+#     :return:
+#     """
+#     logging.info('keyboard_add_list_personal')
+#     button_1 = InlineKeyboardButton(text='Назначить',
+#                                     callback_data='add_personal_list')
+#     button_2 = InlineKeyboardButton(text='Отменить',
+#                                     callback_data='not_add_personal_list')
+#     keyboard = InlineKeyboardMarkup(inline_keyboard=[[button_1, button_2]])
+#     return keyboard
 
 
 def keyboards_del_personal(list_admin, back, forward, count) -> InlineKeyboardMarkup:

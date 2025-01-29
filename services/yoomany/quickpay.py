@@ -9,16 +9,17 @@ client = Client(
     token=config.tg_bot.yoomoney_access_token
 )
 
-label = str(uuid4())
+label = str(111)
 
 quickpay = Quickpay(
-    receiver=config.tg_bot.yoomoney_receiver,
+    receiver=str(config.tg_bot.yoomoney_receiver),
     quickpay_form="paid",
     targets="Платная подписка",
-    paymentType="SB",
-    sum=2,
+    paymentType="AC",
+    sum=200,
     label=label
 )
+
 
 print(quickpay.base_url, quickpay.redirected_url, sep="\n")
 

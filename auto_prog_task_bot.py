@@ -5,8 +5,9 @@ from aiogram.enums import ParseMode
 from config_data.config import Config, load_config
 from handlers import error, other_handlers, start_handler
 from handlers.admin import handler_edit_list_personal
-from handlers.partner import handler_partner_answer
-from handlers.user import handler_rates, handler_user_quality_answer, handler_send_question, handler_my_rate
+from handlers.partner import handler_partner_answer, handler_dialog_partner, handler_report
+from handlers.user import handler_rates, handler_user_quality_answer, handler_send_question, handler_my_rate,\
+    handler_select_partner
 from notify_admins import on_startup_notify
 from database.models import async_main
 
@@ -45,11 +46,14 @@ async def main():
     dp.include_router(error.router)
     dp.include_router(start_handler.router)
     dp.include_router(handler_edit_list_personal.router)
-    dp.include_router(handler_partner_answer.router)
+    dp.include_routers(handler_partner_answer.router,
+                       handler_dialog_partner.router,
+                       handler_report.router)
     dp.include_routers(handler_rates.router,
                        handler_my_rate.router,
                        handler_send_question.router,
-                       handler_user_quality_answer.router)
+                       handler_user_quality_answer.router,
+                       handler_select_partner.router)
     dp.include_router(other_handlers.router)
 
     # Пропускаем накопившиеся update и запускаем polling

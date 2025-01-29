@@ -20,12 +20,11 @@ config: Config = load_config()
 
 
 @router.message(CommandStart())
+@router.message(F.text == 'Главное меню')
 @error_handler
 async def process_start_command_user(message: Message, state: FSMContext, bot: Bot) -> None:
     """
-    Пользовательский режим запускается если, пользователь ввел команду /start
-     или если администратор ввел команду /user
-    1. Добавляем пользователя в БД если его еще нет в ней
+    Обработки запуска бота или ввода команды /start
     :param message:
     :param state:
     :param bot:
@@ -63,7 +62,9 @@ async def process_start_command_user(message: Message, state: FSMContext, bot: B
                           datetime.strptime(last_subscribe.date_completion, date_format))
             rate: Rate = await rq.get_rate_id(rate_id=last_subscribe.rate_id)
             if delta_time.days < rate.duration_rate:
-                active_subscribe = True
+                rate: Rate = await rq.get_rate_id(rate_id=last_subscribe.rate_id)
+                if last_subscribe.count_question < rate.question_rate:
+                    active_subscribe = True
         # если нет подписок или подписки не активны
         if not subscribes or not active_subscribe:
             await message.answer(text=f'Приветственное сообщение! Описание того для чего предназначен этот бот',
