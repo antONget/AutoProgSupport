@@ -142,8 +142,9 @@ async def finish_dialog_user(message: Message, state: FSMContext, bot: Bot):
     id_question: str = data['id_question']
     info_partner: User = await rq.get_user_by_id(tg_id=partner_dialog)
 
-    await message.answer(text=f'Диалог со специалистом #_{info_partner.id} для решения вопроса № {id_question} закрыт.'
-                              f' Оцените качество решения вашего вопроса',
+    await message.answer(text=f'Диалог со специалистом #_{info_partner.id} для решения вопроса № {id_question} закрыт.',
+                         reply_markup=kb.keyboard_finish_dialog_main_menu())
+    await message.answer(text=f'Оцените качество решения вашего вопроса',
                          reply_markup=kb.keyboard_quality_answer(question_id=int(id_question)))
 
 

@@ -15,6 +15,18 @@ def keyboard_finish_dialog() -> ReplyKeyboardMarkup:
     return keyboard
 
 
+def keyboard_finish_dialog_main_menu() -> ReplyKeyboardMarkup:
+    """
+    Клавиатура для открытия диалога с партнером
+    :return:
+    """
+    logging.info("keyboard_finish_dialog_main_menu")
+    button_1 = KeyboardButton(text='Главное меню')
+    keyboard = ReplyKeyboardMarkup(keyboard=[[button_1]],
+                                   resize_keyboard=True)
+    return keyboard
+
+
 def keyboard_quality_answer(question_id: int) -> InlineKeyboardMarkup:
     """
     Клавиатура для оценки качества ответа
