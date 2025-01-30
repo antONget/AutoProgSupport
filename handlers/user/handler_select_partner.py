@@ -34,7 +34,7 @@ async def process_selectpartner(callback: CallbackQuery, state: FSMContext, bot:
     :param state:
     :return:
     """
-    logging.info('process_selectpartner')
+    logging.info(f'process_selectpartner {callback.data}')
     tg_id_partner: str = callback.data.split('_')[1]
     id_question: str = callback.data.split('_')[-1]
     info_partner: User = await rq.get_user_by_id(tg_id=int(tg_id_partner))
@@ -72,6 +72,7 @@ async def process_selectpartner(callback: CallbackQuery, state: FSMContext, bot:
             pass
         await rq.del_executor(question_id=int(id_question), tg_id=int(executor.tg_id))
     await rq.set_question_executor(question_id=int(id_question), executor=int(tg_id_partner))
+    await callback.answer()
 
 
 @router.callback_query(F.data.startswith('payquestion_'))
