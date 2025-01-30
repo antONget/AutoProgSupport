@@ -437,14 +437,11 @@ async def add_dialog(data: dict) -> None:
     :param data:
     :return:
     """
-    logging.info(f'add_question')
+    logging.info(f'add_dialog')
     async with async_session() as session:
-        dialog = await session.scalar(select(Dialog).where(data['tg_id_user'] == Dialog.tg_id_user,
-                                                           data['tg_id_partner'] == Dialog.tg_id_partner))
-        if not dialog:
-            new_dialog = Dialog(**data)
-            session.add(new_dialog)
-            await session.commit()
+        new_dialog = Dialog(**data)
+        session.add(new_dialog)
+        await session.commit()
 
 
 async def get_dialog_active_tg_id(tg_id: int) -> Dialog:
@@ -453,7 +450,7 @@ async def get_dialog_active_tg_id(tg_id: int) -> Dialog:
     :param tg_id:
     :return:
     """
-    logging.info('set_question_quality')
+    logging.info('get_dialog_active_tg_id')
     async with async_session() as session:
         return await session.scalar(select(Dialog).filter(and_(or_(Dialog.tg_id_user == tg_id,
                                                                    Dialog.tg_id_partner == tg_id),
@@ -466,7 +463,7 @@ async def set_dialog_completed_tg_id(tg_id: int) -> None:
     :param tg_id:
     :return:
     """
-    logging.info('set_question_quality')
+    logging.info('set_dialog_completed_tg_id')
     async with async_session() as session:
         dialog = await session.scalar(select(Dialog).filter(and_(or_(Dialog.tg_id_user == tg_id,
                                                                      Dialog.tg_id_partner == tg_id),

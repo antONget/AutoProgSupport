@@ -89,6 +89,7 @@ async def check_pay_select_partner(callback: CallbackQuery, state: FSMContext, b
     result = check_payment(payment_id=payment_id)
     # result = 'succeeded'
     if result == 'succeeded':
+        await state.update_data(id_question=id_question)
         await rq.set_subscribe_user(tg_id=callback.from_user.id)
         info_question: Question = await rq.get_question_id(question_id=int(id_question))
         info_user: User = await rq.get_user_by_id(tg_id=info_question.tg_id)
@@ -108,7 +109,7 @@ async def check_pay_select_partner(callback: CallbackQuery, state: FSMContext, b
         data_dialog = {"tg_id_user": callback.from_user.id,
                        "tg_id_partner": info_question.partner_solution,
                        "id_question": int(id_question),
-                       "status": 'active'}
+                       "status": rq.StatusDialog.active}
         await rq.add_dialog(data=data_dialog)
     else:
         await callback.answer(text='Платеж не прошел', show_alert=True)
@@ -156,8 +157,13 @@ async def finish_dialog_user(message: Message, state: FSMContext, bot: Bot):
             partner_dialog: int = info_dialog.tg_id_partner
             id_question: str = info_dialog.id_question
             info_partner: User = await rq.get_user_by_id(tg_id=partner_dialog)
-
-            await message.answer(text=f'Диалог со специалистом #_{info_partner.id} для решения вопроса № {id_question} закрыт.',
+            info_user: User = await rq.get_user_by_id(tg_id=info_dialog.tg_id_user)
+            await bot.send_message(chat_id=partner_dialog,
+                                   text=f'Диалог с пользователем #_{info_user.id} для решения вопроса'
+                                        f' № {id_question} закрыт.',
+                                   reply_markup=kb.keyboard_finish_dialog_main_menu())
+            await message.answer(text=f'Диалог со специалистом #_{info_partner.id} для решения вопроса'
+                                      f' № {id_question} закрыт.',
                                  reply_markup=kb.keyboard_finish_dialog_main_menu())
             await message.answer(text=f'Оцените качество решения вашего вопроса',
                                  reply_markup=kb.keyboard_quality_answer(question_id=int(id_question)))
@@ -166,9 +172,14 @@ async def finish_dialog_user(message: Message, state: FSMContext, bot: Bot):
             user_dialog: int = info_dialog.tg_id_user
             id_question: str = info_dialog.id_question
             info_user: User = await rq.get_user_by_id(tg_id=user_dialog)
+            info_partner: User = await rq.get_user_by_id(tg_id=info_dialog.tg_id_partner)
             await message.answer(
                 text=f'Диалог с пользователем #_{info_user.id} для решения вопроса № {id_question} закрыт.',
                 reply_markup=kb.keyboard_finish_dialog_main_menu())
+            await bot.send_message(chat_id=user_dialog,
+                                   text=f'Диалог со специалистом #_{info_partner.id} для решения вопроса'
+                                        f' № {id_question} закрыт.',
+                                   reply_markup=kb.keyboard_finish_dialog_main_menu())
             await bot.send_message(chat_id=user_dialog,
                                    text=f'Оцените качество решения вопроса № {id_question}',
                                    reply_markup=kb.keyboard_quality_answer(question_id=int(id_question)))

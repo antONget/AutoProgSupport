@@ -5,6 +5,7 @@ from aiogram.fsm.state import State, StatesGroup
 from aiogram.filters import StateFilter, or_f
 
 import keyboards.user.keyboard_send_question as kb
+from keyboards.user.keyboards_rate import keyboards_select_rate
 import database.requests as rq
 from database.models import User, Rate, Subscribe, Question, Dialog
 from utils.error_handling import error_handler
@@ -37,8 +38,10 @@ async def send_question(callback: CallbackQuery, state: FSMContext, bot: Bot):
     logging.info('send_question')
     info_dialog: Dialog = await rq.get_dialog_active_tg_id(tg_id=callback.from_user.id)
     if info_dialog:
-        await callback.answer('В данный момент у вас есть один не закрытый диалог для его закрытия введите команду'
-                              ' /close_dialog')
+        await callback.message.edit_text(text='В данный момент у вас есть один не закрытый диалог для его закрытия введите команду'
+                                              ' /close_dialog',
+                                         reply_markup=None)
+        await callback.answer()
         return
     # проверка на наличие активной подписки
     subscribes: list[Subscribe] = await rq.get_subscribes_user(tg_id=callback.from_user.id)
@@ -55,7 +58,9 @@ async def send_question(callback: CallbackQuery, state: FSMContext, bot: Bot):
             if last_subscribe.count_question < rate.question_rate:
                 active_subscribe = True
     if not subscribes or not active_subscribe:
-        await callback.message.edit_text(text=f'Действие вашей подписки завершено, продлите подписку')
+        list_rates: list[Rate] = await rq.get_list_rate()
+        await callback.message.edit_text(text=f'Действие вашей подписки завершено, продлите подписку',
+                                         reply_markup=keyboards_select_rate(list_rate=list_rates))
     else:
         await callback.message.edit_text(text='Пришлите описание вашей проблемы, можете добавить фото или файл 📎 .',
                                          reply_markup=None)

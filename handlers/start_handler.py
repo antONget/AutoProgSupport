@@ -75,7 +75,7 @@ async def process_start_command_user(message: Message, state: FSMContext, bot: B
                                       f'<b>Ваш тариф:</b> {rate_info.title_rate}\n'
                                       f'<b>Срок подписки:</b> {last_subscribe.date_completion}\n'
                                       f'<b>Количество вопросов:</b> {last_subscribe.count_question}/{rate_info.question_rate}',
-                                 reply_markup=kb.keyboard_send_question())
+                                 reply_markup=kb.keyboard_start(role=rq.UserRole.user))
     # партнер
     elif user.role == rq.UserRole.partner:
         await message.answer(text=f'Добро пожаловать! Вы являетесь ПАРТНЕРОМ проекта',

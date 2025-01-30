@@ -1,5 +1,7 @@
 from aiogram import F, Router, Bot
 from aiogram.types import Message
+from aiogram.fsm.context import FSMContext
+from aiogram.fsm.state import State, StatesGroup
 
 import keyboards.user.keyboards_rate as kb
 import database.requests as rq
@@ -13,11 +15,13 @@ from datetime import datetime
 config: Config = load_config()
 router = Router()
 
+class QuestionState(StatesGroup):
+    question = State()
 
 # Персонал
 @router.message(F.text == 'Задать вопрос')
 @error_handler
-async def press_button_my_rate(message: Message, bot: Bot) -> None:
+async def press_button_my_rate(message: Message, state: FSMContext, bot: Bot) -> None:
     """
     Проверка тарифа
     :param message:
@@ -38,7 +42,9 @@ async def press_button_my_rate(message: Message, bot: Bot) -> None:
                       datetime.strptime(last_subscribe.date_completion, date_format))
         rate: Rate = await rq.get_rate_id(rate_id=last_subscribe.rate_id)
         if delta_time.days < rate.duration_rate:
-            active_subscribe = True
+            rate: Rate = await rq.get_rate_id(rate_id=last_subscribe.rate_id)
+            if last_subscribe.count_question < rate.question_rate:
+                active_subscribe = True
     # если нет подписок или подписки не активны
     if not subscribes or not active_subscribe:
         list_rate: list[Rate] = await rq.get_list_rate()
@@ -49,5 +55,11 @@ async def press_button_my_rate(message: Message, bot: Bot) -> None:
         rate_info: Rate = await rq.get_rate_id(rate_id=last_subscribe.rate_id)
         await message.answer(text=f'<b>Ваш тариф:</b> {rate_info.title_rate}\n'
                                   f'<b>Срок подписки:</b> {last_subscribe.date_completion}\n'
-                                  f'<b>Количество вопросов:</b> {last_subscribe.count_question}/{rate_info.question_rate}',
-                             reply_markup=kb.keyboard_send_question())
+                                  f'<b>Количество вопросов:</b> {last_subscribe.count_question}/{rate_info.question_rate}\n\n'
+                                  f'Пришлите описание вашей проблемы, можете добавить фото или файл 📎 .',
+                             reply_markup=None)
+                             # reply_markup=kb.keyboard_send_question())
+        await state.set_state(QuestionState.question)
+        await state.update_data(content='')
+        # await state.update_data(count=[])
+        await state.update_data(task='')
