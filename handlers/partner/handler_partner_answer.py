@@ -94,7 +94,8 @@ async def get_cost_question_partner(message: Message, state: FSMContext, bot: Bo
         msg_2 = await bot.send_message(chat_id=info_question.tg_id,
                                      text=f'Специалист #_{info_user.id} оценил стоимость решения'
                                           f' вопроса № {question_id} в {message.text} рублей. \n'
-                                          f'Для выбора этого специалиста для решения вашего вопроса нажмите "Выбрать"',
+                                          f'Для выбора этого специалиста для решения вашего вопроса нажмите "Выбрать" '
+                                          f'или ожидайте ответа от других специалистов',
                                      reply_markup=kb.keyboard_user_select_partner(tg_id=message.from_user.id,
                                                                             id_question=question_id))
         info_executor: Executor = await rq.get_executor(question_id=int(question_id),
