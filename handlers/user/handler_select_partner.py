@@ -1,5 +1,5 @@
 from aiogram import F, Router, Bot
-from aiogram.types import CallbackQuery, Message, InputMediaPhoto
+from aiogram.types import CallbackQuery, Message, InputMediaPhoto, FSInputFile
 from aiogram.fsm.context import FSMContext, StorageKey
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.filters import StateFilter, or_f
@@ -60,11 +60,11 @@ async def process_selectpartner(callback: CallbackQuery, state: FSMContext, bot:
     executors: list[Executor] = await rq.get_executor_not(question_id=int(id_question), tg_id=int(tg_id_partner))
     list_executors: list = [executor for executor in executors]
     for executor in list_executors:
-        # try:
-        await bot.delete_message(chat_id=executor.tg_id,
-                                 message_id=executor.message_id)
-        # except:
-        #     pass
+        try:
+            await bot.delete_message(chat_id=executor.tg_id,
+                                     message_id=executor.message_id)
+        except:
+            pass
         try:
             await bot.delete_message(chat_id=callback.from_user.id,
                                      message_id=executor.message_id_cost)
@@ -199,6 +199,13 @@ async def request_content_photo_text(message: Message, state: FSMContext, bot: B
     :return:
     """
     logging.info(f'request_content_photo_text {message.chat.id}')
+    if message.text == '/get_logfile':
+        file_path = "py_log.log"
+        await message.answer_document(FSInputFile(file_path))
+
+    if message.text == '/get_DB':
+        file_path = "database/db.sqlite3"
+        await message.answer_document(FSInputFile(file_path))
     info_dialog: Dialog = await rq.get_dialog_active_tg_id(tg_id=message.from_user.id)
     if info_dialog:
         dialog_chat_id = None
