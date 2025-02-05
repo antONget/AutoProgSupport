@@ -10,6 +10,7 @@ import database.requests as rq
 from database.models import User, Rate
 from utils.error_handling import error_handler
 from services.yookassa.payments import create_payment_yookassa, check_payment
+from services.yoomany.quickpay import yoomany_payment, yoomany_chek_payment
 from config_data.config import Config, load_config
 
 import logging
@@ -50,11 +51,21 @@ async def select_rate(callback: CallbackQuery, bot: Bot):
     logging.info('select_rate')
     rate_id = callback.data.split('_')[-1]
     rate_info = await rq.get_rate_id(rate_id=int(rate_id))
+    # YOOKASSA
+    # payment_url, payment_id = create_payment_yookassa(amount=rate_info.amount_rate,
+    #                                                   chat_id=callback.from_user.id,
+    #                                                   content=rate_info.title_rate)
+    # await callback.message.edit_text(text=f'Оплатите доступ к боту согласно выбранного тарифа и нажмите "Продолжить"',
+    #                                  reply_markup=kb.keyboard_payment(payment_url=payment_url,
+    #                                                                   payment_id=payment_id,
+    #                                                                   amount=rate_info.amount_rate,
+    #                                                                   rate_id=rate_id))
     payment_url, payment_id = create_payment_yookassa(amount=rate_info.amount_rate,
                                                       chat_id=callback.from_user.id,
                                                       content=rate_info.title_rate)
+    quickpay_base_url, quickpay_redirected_url, payment_id = await yoomany_payment(amount=rate_info.amount_rate)
     await callback.message.edit_text(text=f'Оплатите доступ к боту согласно выбранного тарифа и нажмите "Продолжить"',
-                                     reply_markup=kb.keyboard_payment(payment_url=payment_url,
+                                     reply_markup=kb.keyboard_payment(payment_url=quickpay_base_url,
                                                                       payment_id=payment_id,
                                                                       amount=rate_info.amount_rate,
                                                                       rate_id=rate_id))
@@ -74,9 +85,9 @@ async def check_pay(callback: CallbackQuery, state: FSMContext, bot: Bot):
     payment_id = callback.data.split('_')[-1]
     rate_id = callback.data.split('_')[-2]
     rate_info = await rq.get_rate_id(rate_id=int(rate_id))
-    result = check_payment(payment_id=payment_id)
+    result = await yoomany_chek_payment(payment_id=payment_id)
     # result = 'succeeded'
-    if result == 'succeeded':
+    if result:
         await callback.message.delete()
         current_date = datetime.now()
         current_date_str = current_date.strftime('%d-%m-%Y %H:%M')

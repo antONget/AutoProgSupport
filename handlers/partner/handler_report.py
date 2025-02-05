@@ -95,8 +95,12 @@ async def process_simple_calendar_finish(callback: CallbackQuery, callback_data:
             list_questions: list = []
             data = await state.get_data()
             start_period = data['start_period']
-            text = ''
+            text = f'Отчет по оказанным услугам в период {data["start_period"].strftime("%d/%m/%Y")}' \
+                   f' - {data["finish_period"].strftime("%d/%m/%Y")}\n\n'
+            text_total = f'Отчет по оказанным услугам в период {data["start_period"].strftime("%d/%m/%Y")}' \
+                         f' - {data["finish_period"].strftime("%d/%m/%Y")}\n\n'
             total = 0
+            report = {}
             for question in questions:
                 if question.date_solution:
                     date_question = datetime(year=int(question.date_solution.split('-')[2].split()[0]),
@@ -106,15 +110,27 @@ async def process_simple_calendar_finish(callback: CallbackQuery, callback_data:
                         list_questions.append(question)
                         executor: Executor = await rq.get_executor(question_id=question.id,
                                                                    tg_id=question.partner_solution)
-                        info_user: User =await rq.get_user_by_id(tg_id=question.tg_id)
+                        info_user: User = await rq.get_user_by_id(tg_id=question.tg_id)
                         info_partner: User = await rq.get_user_by_id(tg_id=question.partner_solution)
                         text += f'Специалист #_{info_partner.id} оказал услугу № {question.id } пользователю #_{question.id}' \
                                 f' на сумму {executor.cost}\n'
                         total += executor.cost
+                        result = report.get(question.partner_solution, False)
+                        if result:
+                            report[question.partner_solution] += executor.cost
+                        else:
+                            report[question.partner_solution] = executor.cost
             if text == '':
                 await callback.message.answer(text='Нет оказанных услуг за выбранный рериод')
                 return
             text += f'ИТОГО: {total}'
+            i = 0
+            for user, earn in report.items():
+                i += 1
+                info_user: User = await rq.get_user_by_id(tg_id=user)
+                text_total += f'{i}. <a href="tg://user?id={user}">{info_user.username}</a> - {earn}\n'
+            text_total += f'ИТОГО: {total}'
             await callback.message.answer(text=text)
+            await callback.message.answer(text=text_total)
         else:
             await callback.message.answer(text=f'В выбранный период нет оказанных услуг')

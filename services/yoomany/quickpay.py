@@ -9,28 +9,25 @@ client = Client(
     token=config.tg_bot.yoomoney_access_token
 )
 
-label = str(111)
 
-quickpay = Quickpay(
-    receiver=str(config.tg_bot.yoomoney_receiver),
-    quickpay_form="paid",
-    targets="Платная подписка",
-    paymentType="AC",
-    sum=200,
-    label=label
-)
+async def yoomany_payment(amount: int):
+    user_id = uuid4()
+    quickpay = Quickpay(
+        receiver=config.tg_bot.yoomoney_receiver,
+        quickpay_form='shop',
+        targets='Оплата услуги',
+        paymentType='SB',
+        sum=amount,
+        label=f'{user_id}'
+    )
+    return quickpay.base_url, quickpay.redirected_url, user_id
 
 
-print(quickpay.base_url, quickpay.redirected_url, sep="\n")
-
-history = client.operation_history(label=label)
-
-start = True
-while start:
-    sleep(10)
+async def yoomany_chek_payment(payment_id: str):
+    history = client.operation_history(label=payment_id)
     for operation in history.operations:
+        print(operation.status)
         if operation.status == "success":
-            start = False
-            print("Оплпата прошла успешно")
+            return True
         else:
-            print("Оплата не прошла")
+            return False

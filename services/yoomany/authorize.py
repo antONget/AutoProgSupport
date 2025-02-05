@@ -7,7 +7,7 @@ config: Config = load_config()
 Authorize(
     client_id=config.tg_bot.yoomoney_client_id,
     client_secret='',
-    redirect_uri="http://site.ru",
+    redirect_uri="https://site.ru",
     scope=["account-info",
            "operation-history",
            "operation-details",
