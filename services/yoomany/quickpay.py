@@ -26,7 +26,6 @@ async def yoomany_payment(amount: int):
 async def yoomany_chek_payment(payment_id: str):
     history = client.operation_history(label=payment_id)
     for operation in history.operations:
-        print(operation.status)
         if operation.status == "success":
             return True
         else:

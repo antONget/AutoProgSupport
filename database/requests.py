@@ -114,6 +114,18 @@ async def set_subscribe_user(tg_id: int) -> None:
 """ RATE """
 
 
+async def add_rate(data: dict) -> None:
+    """
+    Добавление тарифа
+    :param data:
+    :return:
+    """
+    logging.info(f'add_rate')
+    async with async_session() as session:
+        session.add(Rate(**data))
+        await session.commit()
+
+
 async def get_rate_id(rate_id: int) -> Rate:
     """
     Получение информации о тарифе
@@ -135,6 +147,20 @@ async def get_list_rate() -> list[Rate]:
         rates = await session.scalars(select(Rate))
         list_rates = [rate for rate in rates]
         return list_rates
+
+
+async def rate_delete_id(rate_id: int) -> None:
+    """
+    Удаление тарифа
+    :param rate_id:
+    :return:
+    """
+    logging.info('get_rate_delete_id')
+    async with async_session() as session:
+        rate = await session.scalar(select(Rate).where(Rate.id == rate_id))
+        if rate:
+            await session.delete(rate)
+            await session.commit()
 
 
 """ QUESTION """
