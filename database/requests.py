@@ -98,7 +98,7 @@ async def get_subscribes_user(tg_id: int) -> list[Subscribe]:
 
 async def set_subscribe_user(tg_id: int) -> None:
     """
-    Получение списка подписок пользователя
+    Увеличиваем количество заданных вопросов
     :param tg_id:
     :return:
     """

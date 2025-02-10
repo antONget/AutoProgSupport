@@ -18,6 +18,7 @@ from datetime import datetime, timedelta
 
 config: Config = load_config()
 router = Router()
+router.message.filter(F.chat.type == "private")
 
 
 @router.message(F.text == 'Тарифы')

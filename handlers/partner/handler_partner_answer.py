@@ -101,17 +101,14 @@ async def get_cost_question_partner(message: Message, state: FSMContext, bot: Bo
                                           f' передана пользователю',
                                      reply_markup=kb.keyboard_partner_continue_question(question_id=question_id))
         info_question: Question = await rq.get_question_id(question_id=int(question_id))
-        info_user: User = await rq.get_user_by_id(tg_id=message.from_user.id)
-        # payment_url, payment_id = create_payment_yookassa(amount=message.text,
-        #                                                   chat_id=message.from_user.id,
-        #                                                   content="Услуга по решению вопроса")
+        info_partner: User = await rq.get_user_by_id(tg_id=message.from_user.id)
         msg_2 = await bot.send_message(chat_id=info_question.tg_id,
-                                     text=f'Специалист #_{info_user.id} оценил стоимость решения'
-                                          f' вопроса № {question_id} в {message.text} рублей. \n'
-                                          f'Для выбора этого специалиста для решения вашего вопроса нажмите "Выбрать" '
-                                          f'или ожидайте ответа от других специалистов',
-                                     reply_markup=kb.keyboard_user_select_partner(tg_id=message.from_user.id,
-                                                                            id_question=question_id))
+                                       text=f'Специалист #_{info_partner.id} оценил стоимость решения'
+                                            f' вопроса № {question_id} в {message.text} рублей. \n'
+                                            f'Для выбора этого специалиста для решения вашего вопроса нажмите "Выбрать" '
+                                            f'или ожидайте ответа от других специалистов',
+                                       reply_markup=kb.keyboard_user_select_partner(tg_id=message.from_user.id,
+                                                                                    id_question=question_id))
         info_executor: Executor = await rq.get_executor(question_id=int(question_id),
                                                         tg_id=message.from_user.id)
         if info_executor.message_id_cost:
@@ -120,10 +117,43 @@ async def get_cost_question_partner(message: Message, state: FSMContext, bot: Bo
                                          message_id=info_executor.message_id_cost)
             except:
                 pass
-                               # reply_markup=kb.keyboard_payment_user_question(payment_url=payment_url,
-                               #                                                payment_id=payment_id,
-                               #                                                amount=cost,
-                               #                                                id_question=question_id))
+
+        await rq.set_cost_executor(question_id=question_id,
+                                   tg_id=message.from_user.id,
+                                   cost=int(cost))
+        await rq.set_message_id_cost_executor(question_id=question_id,
+                                              tg_id=message.from_user.id,
+                                              message_id_cost=msg_2.message_id)
+        await rq.set_message_id_executor(question_id=question_id,
+                                         tg_id=message.from_user.id,
+                                         message_id=msg_1.message_id)
+        await state.set_state(state=None)
+    if cost.isdigit() and int(cost) == 0:
+        try:
+            await bot.delete_message(chat_id=message.from_user.id,
+                                     message_id=message.message_id - 1)
+        except:
+            pass
+        info_question: Question = await rq.get_question_id(question_id=int(question_id))
+        info_user: User = await rq.get_user_by_id(tg_id=info_question.tg_id)
+        msg_1 = await message.answer(text=f'Ваше предложение о решении вопроса № {question_id}'
+                                          f' <b>бесплатно</b> передано пользователю #_{info_user.id}',
+                                     reply_markup=kb.keyboard_partner_continue_question(question_id=question_id))
+        info_partner: User = await rq.get_user_by_id(tg_id=message.from_user.id)
+        msg_2 = await bot.send_message(chat_id=info_question.tg_id,
+                                       text=f'Специалист #_{info_partner.id} предлагает решить вопрос  № {question_id}'
+                                            f' <b>бесплатно</b>. Для выбора этого специалиста для решения вашего вопроса'
+                                            f' нажмите "Выбрать"',
+                                       reply_markup=kb.keyboard_user_select_partner_gratis(tg_id=message.from_user.id,
+                                                                                           id_question=question_id))
+        info_executor: Executor = await rq.get_executor(question_id=int(question_id),
+                                                        tg_id=message.from_user.id)
+        if info_executor.message_id_cost:
+            try:
+                await bot.delete_message(chat_id=info_question.tg_id,
+                                         message_id=info_executor.message_id_cost)
+            except:
+                pass
         await rq.set_cost_executor(question_id=question_id,
                                    tg_id=message.from_user.id,
                                    cost=int(cost))

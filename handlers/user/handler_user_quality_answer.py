@@ -19,6 +19,7 @@ import asyncio
 
 config: Config = load_config()
 router = Router()
+router.message.filter(F.chat.type == "private")
 
 
 class StageQuality(StatesGroup):

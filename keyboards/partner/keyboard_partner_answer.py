@@ -44,6 +44,17 @@ def keyboard_user_select_partner(tg_id: int, id_question: int) -> InlineKeyboard
     return keyboard
 
 
+def keyboard_user_select_partner_gratis(tg_id: int, id_question: int) -> InlineKeyboardMarkup:
+    """
+    Клавиатура для выбора пользователя для диалога
+    :return:
+    """
+    logging.info("keyboard_user_select_partner_gratis")
+    button_1 = InlineKeyboardButton(text=f'Выбрать',
+                                    callback_data=f'gratis_{tg_id}_{id_question}')
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[[button_1]])
+    return keyboard
+
 # def keyboard_user_question(question_id: int) -> InlineKeyboardMarkup:
 #     """
 #     Клавиатура для ответа или отклонения вопроса пользователя

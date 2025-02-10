@@ -14,9 +14,12 @@ from datetime import datetime
 
 config: Config = load_config()
 router = Router()
+router.message.filter(F.chat.type == "private")
+
 
 class QuestionState(StatesGroup):
     question = State()
+
 
 # Персонал
 @router.message(F.text == 'Задать вопрос')
