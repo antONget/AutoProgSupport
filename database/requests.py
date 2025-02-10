@@ -44,6 +44,20 @@ async def set_user_role(tg_id: int, role: str) -> None:
             await session.commit()
 
 
+async def set_user_fullname(tg_id: int, fullname: str) -> None:
+    """
+    Обновление роли пользователя
+    :param tg_id:
+    :param fullname:
+    :return:
+    """
+    logging.info('set_user_fullname')
+    async with async_session() as session:
+        user = await session.scalar(select(User).where(User.tg_id == tg_id))
+        if user:
+            user.fullname = fullname
+            await session.commit()
+
 async def get_user_by_id(tg_id: int) -> User:
     """
     Получение информации о пользователе по tg_id

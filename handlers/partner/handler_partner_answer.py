@@ -50,15 +50,23 @@ async def partner_answer(callback: CallbackQuery, state: FSMContext, bot: Bot):
                                          reply_markup=None)
         partner_info: User = await rq.get_user_by_id(tg_id=executor.tg_id)
         if executor.message_id_cost:
+            if partner_info.fullname != "none":
+                name_text = partner_info.fullname
+            else:
+                name_text = f"Специалист #_{partner_info.id}"
             await bot.edit_message_text(chat_id=question.tg_id,
                                         message_id=executor.message_id_cost,
-                                        text=f'Специалист #_{partner_info.id} отказался от решения вопроса'
+                                        text=f'{name_text} отказался от решения вопроса'
                                              f' №{question.id}',
                                         reply_markup=None)
             # await bot.send_message(text=f'Специалист #_{partner_info.id} отказался от решения вопроса №{question.id}')
         else:
+            if partner_info.fullname != "none":
+                name_text = partner_info.fullname
+            else:
+                name_text = f"Специалист #_{partner_info.id}"
             await bot.send_message(chat_id=question.tg_id,
-                                   text=f'Специалист #_{partner_info.id} отказался от решения вопроса №{question.id}')
+                                   text=f'{name_text} отказался от решения вопроса №{question.id}')
         # list_partner: list[User] = await rq.get_users_role(role=rq.UserRole.partner)
         # await mailing_list_partner(callback=callback, list_partner=list_partner, question_id=int(question_id), bot=bot)
     elif answer == 'ask':
@@ -102,8 +110,12 @@ async def get_cost_question_partner(message: Message, state: FSMContext, bot: Bo
                                      reply_markup=kb.keyboard_partner_continue_question(question_id=question_id))
         info_question: Question = await rq.get_question_id(question_id=int(question_id))
         info_partner: User = await rq.get_user_by_id(tg_id=message.from_user.id)
+        if info_partner.fullname != "none":
+            name_text = info_partner.fullname
+        else:
+            name_text = f"Специалист #_{info_partner.id}"
         msg_2 = await bot.send_message(chat_id=info_question.tg_id,
-                                       text=f'Специалист #_{info_partner.id} оценил стоимость решения'
+                                       text=f'{name_text} оценил стоимость решения'
                                             f' вопроса № {question_id} в {message.text} рублей. \n'
                                             f'Для выбора этого специалиста для решения вашего вопроса нажмите "Выбрать" '
                                             f'или ожидайте ответа от других специалистов',
@@ -128,7 +140,7 @@ async def get_cost_question_partner(message: Message, state: FSMContext, bot: Bo
                                          tg_id=message.from_user.id,
                                          message_id=msg_1.message_id)
         await state.set_state(state=None)
-    if cost.isdigit() and int(cost) == 0:
+    elif cost.isdigit() and int(cost) == 0:
         try:
             await bot.delete_message(chat_id=message.from_user.id,
                                      message_id=message.message_id - 1)
@@ -140,8 +152,12 @@ async def get_cost_question_partner(message: Message, state: FSMContext, bot: Bo
                                           f' <b>бесплатно</b> передано пользователю #_{info_user.id}',
                                      reply_markup=kb.keyboard_partner_continue_question(question_id=question_id))
         info_partner: User = await rq.get_user_by_id(tg_id=message.from_user.id)
+        if info_partner.fullname != "none":
+            name_text = info_partner.fullname
+        else:
+            name_text = f"Специалист #_{info_partner.id}"
         msg_2 = await bot.send_message(chat_id=info_question.tg_id,
-                                       text=f'Специалист #_{info_partner.id} предлагает решить вопрос  № {question_id}'
+                                       text=f'{name_text} предлагает решить вопрос  № {question_id}'
                                             f' <b>бесплатно</b>. Для выбора этого специалиста для решения вашего вопроса'
                                             f' нажмите "Выбрать"',
                                        reply_markup=kb.keyboard_user_select_partner_gratis(tg_id=message.from_user.id,
