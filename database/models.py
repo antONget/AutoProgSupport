@@ -69,6 +69,7 @@ class Dialog(Base):
     tg_id_user: Mapped[int] = mapped_column(BigInteger)
     tg_id_partner: Mapped[int] = mapped_column(BigInteger)
     id_question: Mapped[int] = mapped_column(Integer)
+    message_thread_id: Mapped[int] = mapped_column(Integer, default=0)
     status: Mapped[str] = mapped_column(String)
 
 

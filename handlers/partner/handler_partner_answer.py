@@ -41,10 +41,24 @@ async def partner_answer(callback: CallbackQuery, state: FSMContext, bot: Bot):
         user: User = await rq.get_user_by_id(tg_id=question.tg_id)
         await callback.message.edit_text(text=f"Укажите стоимость решения вопроса №{question.id}")
         await state.set_state(StatePartner.state_cost)
+    # специалист нажал кнопку отказаться
     elif answer == 'reject':
         question: Question = await rq.get_question_id(question_id=int(question_id))
+        executor: Executor = await rq.get_executor(question_id=question.id,
+                                                   tg_id=callback.from_user.id)
         await callback.message.edit_text(text=f"Вы отказались от вопроса №{question.id}",
                                          reply_markup=None)
+        partner_info: User = await rq.get_user_by_id(tg_id=executor.tg_id)
+        if executor.message_id_cost:
+            await bot.edit_message_text(chat_id=question.tg_id,
+                                        message_id=executor.message_id_cost,
+                                        text=f'Специалист #_{partner_info.id} отказался от решения вопроса'
+                                             f' №{question.id}',
+                                        reply_markup=None)
+            # await bot.send_message(text=f'Специалист #_{partner_info.id} отказался от решения вопроса №{question.id}')
+        else:
+            await bot.send_message(chat_id=question.tg_id,
+                                   text=f'Специалист #_{partner_info.id} отказался от решения вопроса №{question.id}')
         # list_partner: list[User] = await rq.get_users_role(role=rq.UserRole.partner)
         # await mailing_list_partner(callback=callback, list_partner=list_partner, question_id=int(question_id), bot=bot)
     elif answer == 'ask':
@@ -77,7 +91,7 @@ async def get_cost_question_partner(message: Message, state: FSMContext, bot: Bo
     data = await state.get_data()
     question_id = data['question_id']
     await message.delete()
-    if cost.isdigit():
+    if cost.isdigit() and int(cost) > 0:
         try:
             await bot.delete_message(chat_id=message.from_user.id,
                                      message_id=message.message_id - 1)

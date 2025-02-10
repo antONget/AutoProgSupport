@@ -457,7 +457,7 @@ class StatusDialog:
     completed = 'completed'
 
 
-async def add_dialog(data: dict) -> None:
+async def add_dialog(data: dict) -> int:
     """
     Добавление нового диалога между пользователем и партнером для обсуждения вопроса
     :param data:
@@ -467,7 +467,10 @@ async def add_dialog(data: dict) -> None:
     async with async_session() as session:
         new_dialog = Dialog(**data)
         session.add(new_dialog)
+        await session.flush()
+        id_ = new_dialog.id
         await session.commit()
+        return id_
 
 
 async def get_dialog_active_tg_id(tg_id: int) -> Dialog:
@@ -481,6 +484,21 @@ async def get_dialog_active_tg_id(tg_id: int) -> Dialog:
         return await session.scalar(select(Dialog).filter(and_(or_(Dialog.tg_id_user == tg_id,
                                                                    Dialog.tg_id_partner == tg_id),
                                                           Dialog.status == StatusDialog.active)))
+
+
+async def set_dialog_active_tg_id_message(id_dialog: int, message_thread_id: int) -> None:
+    """
+    Получаем активный диалог пользователя
+    :param id_dialog:
+    :param message_thread_id
+    :return:
+    """
+    logging.info('get_dialog_active_tg_id')
+    async with async_session() as session:
+        dialog = await session.scalar(select(Dialog).filter(Dialog.id == id_dialog))
+        if dialog:
+            dialog.message_thread_id = message_thread_id
+            await session.commit()
 
 
 async def set_dialog_completed_tg_id(tg_id: int) -> None:

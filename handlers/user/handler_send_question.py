@@ -213,10 +213,11 @@ async def mailing_list_partner(callback: CallbackQuery, list_partner: list, ques
     """
     logging.info('mailing_list_partner')
     if list_partner:
+        print(list_partner)
         for partner in list_partner:
             info_dialog: Dialog = await rq.get_dialog_active_tg_id(tg_id=partner.tg_id)
             if info_dialog:
-                return
+                continue
                 # получаем информацию о вопросе
             question: Question = await rq.get_question_id(question_id=question_id)
             user: User = await rq.get_user_by_id(tg_id=question.tg_id)

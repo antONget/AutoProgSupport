@@ -3,6 +3,7 @@ from aiogram.types import CallbackQuery, Message, InputMediaPhoto, FSInputFile
 from aiogram.fsm.context import FSMContext, StorageKey
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.filters import StateFilter, or_f
+from aiogram.types.forum_topic import ForumTopic
 
 import database.requests as rq
 from database.models import User, Rate, Subscribe, Question, Executor, Dialog
@@ -61,6 +62,8 @@ async def process_selectpartner(callback: CallbackQuery, state: FSMContext, bot:
     list_executors: list = [executor for executor in executors]
     for executor in list_executors:
         try:
+            await bot.send_message(chat_id=executor.tg_id,
+                                   text=f'Специалист #_{info_partner.id} выбран для решения вопроса {id_question}')
             await bot.delete_message(chat_id=executor.tg_id,
                                      message_id=executor.message_id)
         except:
@@ -88,7 +91,8 @@ async def check_pay_select_partner(callback: CallbackQuery, state: FSMContext, b
     payment_id: str = callback.data.split('_')[-1]
     id_question: str = callback.data.split('_')[-2]
     result = check_payment(payment_id=payment_id)
-    # result = 'succeeded'
+    if config.tg_bot.test == 'TRUE':
+        result = 'succeeded'
     if result == 'succeeded':
         await state.update_data(id_question=id_question)
         await rq.set_subscribe_user(tg_id=callback.from_user.id)
@@ -97,8 +101,10 @@ async def check_pay_select_partner(callback: CallbackQuery, state: FSMContext, b
         info_partner: User = await rq.get_user_by_id(tg_id=info_question.partner_solution)
         await callback.message.delete()
         await callback.message.answer(text=f'Оплата вопроса № {info_question.id} прошла успешно.\n'
-                                           f'Между вами со специалистом #_{info_partner.id} для решения вопроса открыт диалог ,'
-                                           f' все ваши сообщения будут перенаправлены ему.\n\n',
+                                           f'Между вами со специалистом #_{info_partner.id} '
+                                           f'для решения вопроса открыт диалог ,'
+                                           f' все ваши сообщения будут перенаправлены ему.\n\n'
+                                           f'Для завершения диалога нажмите "Завершить диалог"',
                                       reply_markup=kb.keyboard_finish_dialog())
         await bot.send_message(chat_id=info_question.partner_solution,
                                text=f'Пользователь #_{info_user.id} оплатил решение вопроса № {info_question.id}.\n'
@@ -111,7 +117,13 @@ async def check_pay_select_partner(callback: CallbackQuery, state: FSMContext, b
                        "tg_id_partner": info_question.partner_solution,
                        "id_question": int(id_question),
                        "status": rq.StatusDialog.active}
-        await rq.add_dialog(data=data_dialog)
+        id_dialog: int = await rq.add_dialog(data=data_dialog)
+        result: ForumTopic = await bot.create_forum_topic(chat_id=config.tg_bot.group_topic,
+                                                          name=f'{id_question}:user/{callback.from_user.id}-partner'
+                                                               f'/{info_question.partner_solution}')
+        await state.update_data(message_thread_id=result.message_thread_id)
+        await rq.set_dialog_active_tg_id_message(id_dialog=id_dialog,
+                                                 message_thread_id=result.message_thread_id)
     else:
         await callback.answer(text='Платеж не прошел', show_alert=True)
 
@@ -221,20 +233,34 @@ async def request_content_photo_text(message: Message, state: FSMContext, bot: B
         if message.text:
             await bot.send_message(chat_id=dialog_chat_id,
                                    text=f'{message.text}')
+            await bot.send_message(chat_id=config.tg_bot.group_topic,
+                                   text=f'{message.text}',
+                                   message_thread_id=info_dialog.message_thread_id)
         elif message.photo:
             photo_id = message.photo[-1].file_id
             await bot.send_photo(chat_id=dialog_chat_id,
                                  photo=photo_id,
                                  caption=f'{message.caption}')
+            await bot.send_photo(chat_id=config.tg_bot.group_topic,
+                                 photo=photo_id,
+                                 caption=f'{message.caption}',
+                                 message_thread_id=info_dialog.message_thread_id)
         elif message.document:
             document_id = message.document.file_id
             await bot.send_document(chat_id=dialog_chat_id,
                                     document=document_id,
                                     caption=f'{message.caption}')
+            await bot.send_document(chat_id=config.tg_bot.group_topic,
+                                    document=document_id,
+                                    caption=f'{message.caption}',
+                                    message_thread_id=info_dialog.message_thread_id)
         elif message.voice:
             voice_id = message.voice.file_id
             await bot.send_voice(chat_id=dialog_chat_id,
                                  voice=voice_id)
+            await bot.send_voice(chat_id=config.tg_bot.group_topic,
+                                 voice=voice_id,
+                                 message_thread_id=info_dialog.message_thread_id)
         else:
             await message.answer(text=f'Такой контент отправить не могу, вы можете отправить:'
                                       f' текст, фото, аудио или документ')

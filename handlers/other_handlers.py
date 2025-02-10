@@ -35,7 +35,10 @@ async def all_message(message: Message) -> None:
         await message.answer_document(FSInputFile(file_path))
     else:
         msg = await message.answer(text='Для того чтобы задать вопрос специалисту, откройте с ним диалог')
-        await message.delete()
+        try:
+            await message.delete()
+        except:
+            pass
         await asyncio.sleep(5)
         await msg.delete()
 

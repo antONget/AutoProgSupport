@@ -37,6 +37,7 @@ async def quality_answer_question(callback: CallbackQuery, state: FSMContext, bo
     """
     logging.info('quality_answer_question')
     question_id = int(callback.data.split('_')[-1])
+    await state.update_data(id_question=question_id)
     quality = int(callback.data.split('_')[1])
     await rq.set_question_quality(question_id=question_id, quality=quality)
     question: Question = await rq.get_question_id(question_id=question_id)
@@ -91,11 +92,21 @@ async def get_comment_user(message: Message, state: FSMContext, bot: Bot):
     text_quality = '⭐' * quality
     info_question: Question = await rq.get_question_id(question_id=int(id_question))
     info_user: User = await rq.get_user_by_id(tg_id=message.from_user.id)
+    info_partner: User = await rq.get_user_by_id(tg_id=info_question.partner_solution)
     await bot.send_message(chat_id=info_question.partner_solution,
                            text=f"Пользователь #_{info_user.id} "
                                 f"оценил вашу помощь на вопрос № {info_question.id} на {text_quality}.\n"
                                 f"<i>Комментарий</i>: {message.text}")
     await message.answer(text='Ваша оценка и комментарий передана специалисту, спасибо!')
+    print(quality)
+    if quality < 4:
+        await send_message_admins(bot=bot,
+                                  text=f"Пользователь "
+                                       f"<a href='tg://user?id={info_user.tg_id}'>{info_user.username}</a>"
+                                       f" указал, что вопрос №{id_question} решен на {text_quality} партнером "
+                                       f"<a href='tg://user?id={info_question.partner_solution}'>"
+                                       f"{info_partner.username}</a>\n"
+                                       f"<i>Комментарий</i>: {message.text}")
     await state.set_state(state=None)
 
 
@@ -116,10 +127,19 @@ async def pass_comment(callback: CallbackQuery, state: FSMContext, bot: Bot):
     text_quality = '⭐' * quality
     info_question: Question = await rq.get_question_id(question_id=int(id_question))
     info_user: User = await rq.get_user_by_id(tg_id=callback.from_user.id)
+    info_partner: User = await rq.get_user_by_id(tg_id=info_question.partner_solution)
     await bot.send_message(chat_id=info_question.partner_solution,
                            text=f"Пользователь #_{info_user.id} "
                                 f"оценил вашу помощь на вопрос № {info_question.id} на {text_quality}.\n"
                                 f"<i>Комментарий</i>: отсутствует")
     await callback.message.edit_text(text='Ваша оценка передана специалисту, спасибо!',
                                      reply_markup=None)
+    if quality < 4:
+        await send_message_admins(bot=bot,
+                                  text=f"Пользователь "
+                                       f"<a href='tg://user?id={info_user.tg_id}'>{info_user.username}</a>"
+                                       f" указал, что вопрос №{id_question} решен на {text_quality} партнером "
+                                       f"<a href='tg://user?id={info_question.partner_solution}'>"
+                                       f"{info_partner.username}</a>\n"
+                                       f"<i>Комментарий</i>: отсутствует")
     await state.set_state(state=None)

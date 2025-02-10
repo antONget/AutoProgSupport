@@ -12,6 +12,8 @@ class TgBot:
     yoomoney_receiver: str
     yookassa_id: int
     yookassa_key: str
+    test: str
+    group_topic: int
 
 
 @dataclass
@@ -29,5 +31,6 @@ def load_config(path: str = None) -> Config:
                                yoomoney_access_token=env('YOOMONEY_ACCESS_TOKEN'),
                                yoomoney_receiver=env('YOOMONEY_RECEIVER'),
                                yookassa_id=env('YOOKASSA_ID'),
-                               yookassa_key=env('YOOKASSA_KEY')
-                               ))
+                               yookassa_key=env('YOOKASSA_KEY'),
+                               test=env('TEST'),
+                               group_topic=env('GROUP_TOPIC')))
