@@ -18,6 +18,7 @@ class User(Base):
     tg_id: Mapped[int] = mapped_column(BigInteger)
     username: Mapped[str] = mapped_column(String, nullable=True)
     fullname: Mapped[str] = mapped_column(String, default='none')
+    balance: Mapped[int] = mapped_column(Integer, default=0)
     role: Mapped[str] = mapped_column(String, default='user')
 
 

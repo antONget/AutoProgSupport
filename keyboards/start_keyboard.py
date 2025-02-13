@@ -14,7 +14,8 @@ def keyboard_start(role: str) -> ReplyKeyboardMarkup:
     if role == UserRole.user:
         button_1 = KeyboardButton(text='Тарифы')
         button_2 = KeyboardButton(text='Задать вопрос')
-        keyboard = ReplyKeyboardMarkup(keyboard=[[button_1], [button_2]], resize_keyboard=True)
+        button_3 = KeyboardButton(text='Баланс')
+        keyboard = ReplyKeyboardMarkup(keyboard=[[button_1], [button_2], [button_3]], resize_keyboard=True)
     elif role == UserRole.admin:
         button_1 = KeyboardButton(text='Партнеры')
         button_2 = KeyboardButton(text='Отчет')

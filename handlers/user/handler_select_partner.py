@@ -8,7 +8,8 @@ from aiogram.types.forum_topic import ForumTopic
 import database.requests as rq
 from database.models import User, Rate, Subscribe, Question, Executor, Dialog
 from utils.error_handling import error_handler
-from services.yookassa.payments import create_payment_yookassa, check_payment
+from services.yoomany.quickpay import yoomany_payment, yoomany_chek_payment
+
 from keyboards.user import keyboard_select_partner as kb
 from config_data.config import Config, load_config
 
@@ -38,21 +39,82 @@ async def process_selectpartner(callback: CallbackQuery, state: FSMContext, bot:
     logging.info(f'process_selectpartner {callback.data}')
     tg_id_partner: str = callback.data.split('_')[1]
     id_question: str = callback.data.split('_')[-1]
+    await rq.set_question_executor(question_id=int(id_question), executor=int(tg_id_partner))
     info_partner: User = await rq.get_user_by_id(tg_id=int(tg_id_partner))
     info_user: User = await rq.get_user_by_id(tg_id=callback.from_user.id)
     info_question: Question = await rq.get_question_id(question_id=int(id_question))
-    info_executor: Executor = await rq.get_executor(question_id=int(id_question), tg_id=int(tg_id_partner))
-    payment_url, payment_id = create_payment_yookassa(amount=info_executor.cost,
-                                                      chat_id=callback.from_user.id,
-                                                      content="Услуга по решению вопроса")
-    await callback.message.edit_text(text=f'Специалист #_{info_partner.id} оценил стоимость решения'
-                                          f' вопроса № {id_question} в {info_executor.cost} рублей. \n'
-                                          f'Для выбора этого специалиста для решения вашего вопроса оплатите указанную'
-                                          f' стоимость и после успешной оплаты нажмите "Продолжить"',
-                                     reply_markup=kb.keyboard_payment_user_question(payment_url=payment_url,
-                                                                                    payment_id=payment_id,
-                                                                                    amount=info_executor.cost,
-                                                                                    id_question=id_question))
+    info_executor: Executor = await rq.get_executor(question_id=int(id_question),
+                                                    tg_id=int(tg_id_partner))
+
+    if info_user.balance < info_executor.cost:
+        quickpay_base_url, quickpay_redirected_url, payment_id = await yoomany_payment(amount=info_executor.cost)
+        if info_partner.fullname != "none":
+            name_text = info_partner.fullname
+        else:
+            name_text = f"Специалист #_{info_partner.id}"
+        await callback.message.edit_text(text=f'{name_text} оценил стоимость решения'
+                                              f' вопроса № {id_question} в {info_executor.cost} рублей. \n'
+                                              f'Для выбора этого специалиста для решения вашего вопроса оплатите указанную'
+                                              f' стоимость и после успешной оплаты нажмите "Продолжить"',
+                                         reply_markup=kb.keyboard_payment(payment_url=quickpay_base_url,
+                                                                          payment_id=payment_id,
+                                                                          amount=info_executor.cost,
+                                                                          id_question=id_question))
+    else:
+        change_balance = info_executor.cost * -1
+        await rq.update_user_balance(tg_id=callback.from_user.id,
+                                     change_balance=change_balance)
+        await state.update_data(id_question=id_question)
+        await rq.set_subscribe_user(tg_id=callback.from_user.id)
+        info_user: User = await rq.get_user_by_id(tg_id=info_question.tg_id)
+        info_partner: User = await rq.get_user_by_id(tg_id=info_question.partner_solution)
+        await callback.message.delete()
+        if info_partner.fullname != "none":
+            name_text = info_partner.fullname
+        else:
+            name_text = f"специалистом #_{info_partner.id}"
+        await callback.message.answer(text=f'Оплата вопроса № {info_question.id} списана с вашего баланса,'
+                                           f' баланс составляет {info_user.balance}.\n'
+                                           f'Между вами с {name_text} '
+                                           f'для решения вопроса открыт диалог ,'
+                                           f' все ваши сообщения будут перенаправлены ему.\n\n'
+                                           f'Для завершения диалога нажмите "Завершить диалог"',
+                                      reply_markup=kb.keyboard_finish_dialog())
+        await bot.send_message(chat_id=info_question.partner_solution,
+                               text=f'Пользователь #_{info_user.id} оплатил решение вопроса № {info_question.id}.\n'
+                                    f'Между вами открыт диалог для решения вопроса,'
+                                    f' все ваши сообщения будут перенаправлены ему.\n\n'
+                                    f'Для завершения диалога нажмите "Завершить диалог"',
+                               reply_markup=kb.keyboard_finish_dialog_partner())
+        # reply_markup=kb.keyboard_open_dialog_user(id_question=id_question))
+        data_dialog = {"tg_id_user": callback.from_user.id,
+                       "tg_id_partner": info_question.partner_solution,
+                       "id_question": int(id_question),
+                       "status": rq.StatusDialog.active}
+        id_dialog: int = await rq.add_dialog(data=data_dialog)
+        result_: ForumTopic = await bot.create_forum_topic(chat_id=config.tg_bot.group_topic,
+                                                           name=f'{id_question}:user/{callback.from_user.id}-partner'
+                                                                f'/{info_question.partner_solution}')
+        if info_question.content_ids == '':
+            await bot.send_message(chat_id=config.tg_bot.group_topic,
+                                   text=info_question.description,
+                                   message_thread_id=result_.message_thread_id)
+        else:
+            content_id = info_question.content_ids
+            typy_file = content_id.split('!')[0]
+            if typy_file == 'photo':
+                await bot.send_photo(chat_id=config.tg_bot.group_topic,
+                                     photo=content_id.split('!')[1],
+                                     caption=info_question.description,
+                                     message_thread_id=result_.message_thread_id)
+            elif typy_file == 'file':
+                await bot.send_document(chat_id=config.tg_bot.group_topic,
+                                        document=content_id.split('!')[1],
+                                        caption=info_question.description,
+                                        message_thread_id=result_.message_thread_id)
+        await state.update_data(message_thread_id=result_.message_thread_id)
+        await rq.set_dialog_active_tg_id_message(id_dialog=id_dialog,
+                                                 message_thread_id=result_.message_thread_id)
 
     await bot.edit_message_text(chat_id=tg_id_partner,
                                 message_id=info_executor.message_id,
@@ -74,7 +136,6 @@ async def process_selectpartner(callback: CallbackQuery, state: FSMContext, bot:
         except:
             pass
         await rq.del_executor(question_id=int(id_question), tg_id=int(executor.tg_id))
-    await rq.set_question_executor(question_id=int(id_question), executor=int(tg_id_partner))
     await callback.answer()
 
 
@@ -82,7 +143,7 @@ async def process_selectpartner(callback: CallbackQuery, state: FSMContext, bot:
 @router.callback_query(F.data.startswith('gratis_'))
 async def check_pay_select_partner(callback: CallbackQuery, state: FSMContext, bot: Bot):
     """
-    Проверка оплаты
+    Проверка оплаты и обработка бесплатного диалога
     :param callback: payquestion_{id_question}_{payment_id}
     :param state:
     :param bot:
@@ -92,19 +153,26 @@ async def check_pay_select_partner(callback: CallbackQuery, state: FSMContext, b
     if callback.data.startswith('payquestion_'):
         payment_id: str = callback.data.split('_')[-1]
         id_question: str = callback.data.split('_')[-2]
-        result = check_payment(payment_id=payment_id)
-
+        result = await yoomany_chek_payment(payment_id=payment_id)
         if config.tg_bot.test == 'TRUE':
-            result = 'succeeded'
-        if result == 'succeeded':
+            result = True
+        if result:
+            info_question: Question = await rq.get_question_id(question_id=int(id_question))
+            info_executor: Executor = await rq.get_executor(question_id=int(id_question),
+                                                            tg_id=info_question.partner_solution)
+            await rq.update_user_balance(tg_id=callback.from_user.id,
+                                         change_balance=info_executor.cost)
             await state.update_data(id_question=id_question)
             await rq.set_subscribe_user(tg_id=callback.from_user.id)
-            info_question: Question = await rq.get_question_id(question_id=int(id_question))
             info_user: User = await rq.get_user_by_id(tg_id=info_question.tg_id)
             info_partner: User = await rq.get_user_by_id(tg_id=info_question.partner_solution)
             await callback.message.delete()
+            if info_partner.fullname != "none":
+                name_text = info_partner.fullname
+            else:
+                name_text = f"специалистом #_{info_partner.id}"
             await callback.message.answer(text=f'Оплата вопроса № {info_question.id} прошла успешно.\n'
-                                               f'Между вами со специалистом #_{info_partner.id} '
+                                               f'Между вами с {name_text} '
                                                f'для решения вопроса открыт диалог ,'
                                                f' все ваши сообщения будут перенаправлены ему.\n\n'
                                                f'Для завершения диалога нажмите "Завершить диалог"',
@@ -114,7 +182,7 @@ async def check_pay_select_partner(callback: CallbackQuery, state: FSMContext, b
                                         f'Между вами открыт диалог для решения вопроса,'
                                         f' все ваши сообщения будут перенаправлены ему.\n\n'
                                         f'Для завершения диалога нажмите "Завершить диалог"',
-                                   reply_markup=kb.keyboard_finish_dialog())
+                                   reply_markup=kb.keyboard_finish_dialog_partner())
                                    # reply_markup=kb.keyboard_open_dialog_user(id_question=id_question))
             data_dialog = {"tg_id_user": callback.from_user.id,
                            "tg_id_partner": info_question.partner_solution,
@@ -148,7 +216,6 @@ async def check_pay_select_partner(callback: CallbackQuery, state: FSMContext, b
             await callback.answer(text='Платеж не прошел', show_alert=True)
     else:
         id_question: str = callback.data.split('_')[-1]
-        print(id_question)
         tg_id_partner: str = callback.data.split('_')[1]
         await rq.set_question_executor(question_id=int(id_question),
                                        executor=int(tg_id_partner))
@@ -273,7 +340,7 @@ async def finish_dialog_user(message: Message, state: FSMContext, bot: Bot):
         await message.answer(text='У вас нет активных диалогов')
 
 
-@router.message(or_f(F.photo, F.text, F.document, F.video, F.voice))
+@router.message(or_f(F.photo, F.text, F.document, F.video, F.voice), F.text != 'Выставить_счет')
 @error_handler
 async def request_content_photo_text(message: Message, state: FSMContext, bot: Bot):
     """

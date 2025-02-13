@@ -6,7 +6,7 @@ from aiogram.filters import StateFilter, or_f
 
 import keyboards.user.keyboard_user_quality_answer as kb
 import database.requests as rq
-from database.models import User, Rate, Subscribe, Question
+from database.models import User, Rate, Subscribe, Question, Executor
 from utils.error_handling import error_handler
 from utils.send_admins import send_message_admins
 
@@ -52,6 +52,11 @@ async def quality_answer_question(callback: CallbackQuery, state: FSMContext, bo
                                     f" № {question.id} на {text_quality}")
         current_date = datetime.now().strftime('%d-%m-%Y %H:%M')
         await rq.set_question_data_solution(question_id=question_id, data_solution=current_date)
+        info_executor: Executor = await rq.get_executor(question_id=question_id,
+                                                        tg_id=question.partner_solution)
+        change_balance = info_executor.cost * -1
+        await rq.update_user_balance(tg_id=callback.from_user.id,
+                                     change_balance=change_balance)
     elif quality > 0:
         await callback.message.edit_text(text='Благодарим за обратную связь, нам очень важна ваша оценка!\n'
                                               'Укажите почему вы снизили оценку?',
@@ -60,6 +65,11 @@ async def quality_answer_question(callback: CallbackQuery, state: FSMContext, bo
         await rq.set_question_data_solution(question_id=question_id, data_solution=current_date)
         await state.update_data(quality=quality)
         await state.set_state(StageQuality.state_comment)
+        info_executor: Executor = await rq.get_executor(question_id=question_id,
+                                                        tg_id=question.partner_solution)
+        change_balance = info_executor.cost * -1
+        await rq.update_user_balance(tg_id=callback.from_user.id,
+                                     change_balance=change_balance)
     else:
         await callback.message.edit_text(text='Благодарим за обратную связь, постараемся решить вашу проблему!',
                                          reply_markup=None)

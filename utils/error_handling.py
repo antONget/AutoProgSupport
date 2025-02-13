@@ -32,7 +32,8 @@ def error_handler(func):
                     message = callback.message
 
             if message:
-                await message.answer(text='Упс.. Что-то пошло не так( Перезапустите бота /start')
+                pass
+                # await message.answer(text='Упс.. Что-то пошло не так( Перезапустите бота /start')
 
             
             # Лог ошибки

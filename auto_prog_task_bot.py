@@ -5,9 +5,10 @@ from aiogram.enums import ParseMode
 from config_data.config import Config, load_config
 from handlers import error, other_handlers, start_handler
 from handlers.admin import handler_edit_list_personal, handler_edit_list_rate
-from handlers.partner import handler_partner_answer, handler_dialog_partner, handler_report, handler_account
+from handlers.partner import handler_partner_answer, handler_dialog_partner, handler_report, handler_account, \
+    handler_send_receipt
 from handlers.user import handler_rates, handler_user_quality_answer, handler_send_question, handler_my_rate,\
-    handler_select_partner
+    handler_select_partner, handler_balance
 from notify_admins import on_startup_notify
 from database.models import async_main
 
@@ -50,8 +51,10 @@ async def main():
     dp.include_routers(handler_partner_answer.router,
                        handler_dialog_partner.router,
                        handler_report.router,
-                       handler_account.router)
+                       handler_account.router,
+                       handler_send_receipt.router)
     dp.include_routers(handler_rates.router,
+                       handler_balance.router,
                        handler_my_rate.router,
                        handler_send_question.router,
                        handler_user_quality_answer.router,

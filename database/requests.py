@@ -58,6 +58,22 @@ async def set_user_fullname(tg_id: int, fullname: str) -> None:
             user.fullname = fullname
             await session.commit()
 
+
+async def update_user_balance(tg_id: int, change_balance: int) -> None:
+    """
+    Обновление баланса пользователя
+    :param tg_id:
+    :param change_balance:
+    :return:
+    """
+    logging.info('set_user_fullname')
+    async with async_session() as session:
+        user = await session.scalar(select(User).where(User.tg_id == tg_id))
+        if user:
+            user.balance += change_balance
+            await session.commit()
+
+
 async def get_user_by_id(tg_id: int) -> User:
     """
     Получение информации о пользователе по tg_id
@@ -299,7 +315,7 @@ async def set_question_comment(question_id: int, comment: str) -> None:
 
 async def set_question_executor(question_id: int, executor: int) -> None:
     """
-    Добавление партнера в список рассылки вопроса
+    Устанавливаем исполнителя для решения вопроса
     :param question_id:
     :param executor:
     :return:
@@ -372,6 +388,23 @@ async def set_cost_executor(question_id: int, tg_id: int, cost: int) -> None:
                                                                Executor.tg_id == tg_id))
         if executor:
             executor.cost = cost
+            await session.commit()
+
+
+async def update_cost_executor(question_id: int, tg_id: int, cost: int) -> None:
+    """
+    Обновление стоимости выполнения заявки партнером
+    :param question_id:
+    :param tg_id:
+    :param cost:
+    :return:
+    """
+    logging.info('set_question_quality')
+    async with async_session() as session:
+        executor = await session.scalar(select(Executor).where(Executor.id_question == question_id,
+                                                               Executor.tg_id == tg_id))
+        if executor:
+            executor.cost += cost
             await session.commit()
 
 

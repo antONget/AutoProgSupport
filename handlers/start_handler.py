@@ -7,7 +7,7 @@ from aiogram.fsm.context import FSMContext
 from keyboards import start_keyboard as kb
 from config_data.config import Config, load_config
 from database import requests as rq
-from database.models import User, Subscribe, Rate
+from database.models import User, Subscribe, Rate, Dialog
 from utils.error_handling import error_handler
 from filter.admin_filter import check_super_admin
 
@@ -31,6 +31,11 @@ async def process_start_command_user(message: Message, state: FSMContext, bot: B
     """
     logging.info(f'process_start_command_user: {message.chat.id}')
     await state.set_state(state=None)
+    info_dialog: Dialog = await rq.get_dialog_active_tg_id(tg_id=message.from_user.id)
+    if info_dialog:
+        await message.answer(text=f'У вас есть не закрытый диалог для решения вопроса №{info_dialog.id_question}, '
+                                  f'для его закрытия введите команду /close_dialog')
+        return
     # добавление пользователя в БД если еще его там нет
     user: User = await rq.get_user_by_id(tg_id=message.from_user.id)
     if not user:

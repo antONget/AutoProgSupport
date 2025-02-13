@@ -19,6 +19,25 @@ def keyboard_payment_user_question(payment_url: str,
     return keyboard
 
 
+def keyboard_payment(payment_url: str,
+                     payment_id: int,
+                     amount: str,
+                     id_question: str) -> InlineKeyboardMarkup:
+    """
+    Клавиатура для проведения и проверки платежа
+    :param payment_url:
+    :param payment_id:
+    :param amount:
+    :param id_question:
+    :return:
+    """
+    logging.info("keyboard_payment")
+    button_1 = InlineKeyboardButton(text='Продолжить', callback_data=f'payquestion_{id_question}_{payment_id}')
+    button_2 = InlineKeyboardButton(text=f'Оплатить {amount} руб.', url=payment_url)
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[[button_2], [button_1]],)
+    return keyboard
+
+
 def keyboard_open_dialog_partner(id_question: str) -> InlineKeyboardMarkup:
     """
     Клавиатура для открытия диалога с партнером
@@ -51,6 +70,19 @@ def keyboard_finish_dialog() -> ReplyKeyboardMarkup:
     logging.info("keyboard_payment")
     button_1 = KeyboardButton(text='Завершить диалог')
     button_2 = KeyboardButton(text='Главное меню')
+    keyboard = ReplyKeyboardMarkup(keyboard=[[button_1], [button_2]],
+                                   resize_keyboard=True)
+    return keyboard
+
+
+def keyboard_finish_dialog_partner() -> ReplyKeyboardMarkup:
+    """
+    Клавиатура для открытия диалога с партнером
+    :return:
+    """
+    logging.info("keyboard_payment")
+    button_1 = KeyboardButton(text='Завершить диалог')
+    button_2 = KeyboardButton(text='Выставить_счет')
     keyboard = ReplyKeyboardMarkup(keyboard=[[button_1], [button_2]],
                                    resize_keyboard=True)
     return keyboard
