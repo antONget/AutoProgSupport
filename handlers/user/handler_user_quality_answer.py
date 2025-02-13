@@ -54,9 +54,9 @@ async def quality_answer_question(callback: CallbackQuery, state: FSMContext, bo
         await rq.set_question_data_solution(question_id=question_id, data_solution=current_date)
         info_executor: Executor = await rq.get_executor(question_id=question_id,
                                                         tg_id=question.partner_solution)
-        change_balance = info_executor.cost * -1
-        await rq.update_user_balance(tg_id=callback.from_user.id,
-                                     change_balance=change_balance)
+        # change_balance = info_executor.cost * -1
+        # await rq.update_user_balance(tg_id=callback.from_user.id,
+        #                              change_balance=change_balance)
     elif quality > 0:
         await callback.message.edit_text(text='Благодарим за обратную связь, нам очень важна ваша оценка!\n'
                                               'Укажите почему вы снизили оценку?',
@@ -67,9 +67,9 @@ async def quality_answer_question(callback: CallbackQuery, state: FSMContext, bo
         await state.set_state(StageQuality.state_comment)
         info_executor: Executor = await rq.get_executor(question_id=question_id,
                                                         tg_id=question.partner_solution)
-        change_balance = info_executor.cost * -1
-        await rq.update_user_balance(tg_id=callback.from_user.id,
-                                     change_balance=change_balance)
+        # change_balance = info_executor.cost * -1
+        # await rq.update_user_balance(tg_id=callback.from_user.id,
+        #                              change_balance=change_balance)
     else:
         await callback.message.edit_text(text='Благодарим за обратную связь, постараемся решить вашу проблему!',
                                          reply_markup=None)
@@ -82,6 +82,11 @@ async def quality_answer_question(callback: CallbackQuery, state: FSMContext, bo
                                                 f" указал, что вопрос №{question.id} не решен партнером "
                                                 f"<a href='tg://user?id={question.partner_solution}'>"
                                                 f"{partner.username}</a>")
+        info_executor: Executor = await rq.get_executor(question_id=question_id,
+                                                        tg_id=partner.tg_id)
+        change_balance = info_executor.cost
+        await rq.update_user_balance(tg_id=callback.from_user.id,
+                                     change_balance=change_balance)
     await callback.answer()
 
 

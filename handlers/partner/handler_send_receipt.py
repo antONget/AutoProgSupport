@@ -59,13 +59,14 @@ async def get_amount_receipt(message: Message, state: FSMContext, bot: Bot):
             await update_cost_executor(question_id=info_dialog.id_question,
                                        tg_id=message.from_user.id,
                                        cost=int(amount_receipt))
-
+            info_executor: Executor = await get_executor(question_id=info_dialog.id_question,
+                                                         tg_id=message.from_user.id)
             quickpay_base_url, quickpay_redirected_url, payment_id = await yoomany_payment(amount=int(amount_receipt))
             if info_partner.fullname != "none":
                 name_text = info_partner.fullname
             else:
                 name_text = f"Специалист #_{info_partner.id}"
-            if info_user.balance < int(amount_receipt):
+            if info_user.balance < info_executor.cost:
                 await bot.send_message(chat_id=info_dialog.tg_id_user,
                                        text=f'{name_text} выставил счет для решения вопроса'
                                             f' вопроса № {info_dialog.id_question} в {amount_receipt} рублей. \n'
@@ -112,8 +113,9 @@ async def check_pay_receipt(callback: CallbackQuery, state: FSMContext, bot: Bot
     if result:
         info_question: Question = await get_question_id(question_id=int(id_question))
         info_user: User = await get_user_by_id(tg_id=callback.from_user.id)
+        change_balance = amount_receipt * -1
         await update_user_balance(tg_id=callback.from_user.id,
-                                  change_balance=amount_receipt)
+                                  change_balance=change_balance)
         await callback.message.edit_text(text=f'Оплата счета на сумму {amount_receipt} для решения вопроса'
                                               f' № {info_question.id} прошла успешно.',
                                          reply_markup=None)
