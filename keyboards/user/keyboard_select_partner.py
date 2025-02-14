@@ -83,7 +83,8 @@ def keyboard_finish_dialog_partner() -> ReplyKeyboardMarkup:
     logging.info("keyboard_payment")
     button_1 = KeyboardButton(text='Завершить диалог')
     button_2 = KeyboardButton(text='Выставить_счет')
-    keyboard = ReplyKeyboardMarkup(keyboard=[[button_1], [button_2]],
+    button_3 = KeyboardButton(text='Отказаться от вопроса')
+    keyboard = ReplyKeyboardMarkup(keyboard=[[button_1], [button_2], [button_3]],
                                    resize_keyboard=True)
     return keyboard
 

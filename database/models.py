@@ -63,6 +63,7 @@ class Executor(Base):
     id_question: Mapped[int] = mapped_column(Integer)
     cost: Mapped[int] = mapped_column(Integer)
     status: Mapped[str] = mapped_column(String)
+    comment_cancel: Mapped[str] = mapped_column(String, default='')
 
 
 class Dialog(Base):

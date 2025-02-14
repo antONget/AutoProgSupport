@@ -54,9 +54,14 @@ async def quality_answer_question(callback: CallbackQuery, state: FSMContext, bo
         await rq.set_question_data_solution(question_id=question_id, data_solution=current_date)
         info_executor: Executor = await rq.get_executor(question_id=question_id,
                                                         tg_id=question.partner_solution)
-        # change_balance = info_executor.cost * -1
-        # await rq.update_user_balance(tg_id=callback.from_user.id,
-        #                              change_balance=change_balance)
+        change_balance = info_executor.cost
+        await rq.update_user_balance(tg_id=info_executor.tg_id,
+                                     change_balance=change_balance)
+        await rq.set_status_executor(question_id=question_id,
+                                     tg_id=info_executor.tg_id,
+                                     status=rq.QuestionStatus.completed)
+        await rq.set_question_status(question_id=question_id,
+                                     status=rq.QuestionStatus.completed)
     elif quality > 0:
         await callback.message.edit_text(text='Благодарим за обратную связь, нам очень важна ваша оценка!\n'
                                               'Укажите почему вы снизили оценку?',
@@ -67,11 +72,21 @@ async def quality_answer_question(callback: CallbackQuery, state: FSMContext, bo
         await state.set_state(StageQuality.state_comment)
         info_executor: Executor = await rq.get_executor(question_id=question_id,
                                                         tg_id=question.partner_solution)
-        # change_balance = info_executor.cost * -1
-        # await rq.update_user_balance(tg_id=callback.from_user.id,
-        #                              change_balance=change_balance)
+        change_balance = info_executor.cost
+        await rq.update_user_balance(tg_id=info_executor.tg_id,
+                                     change_balance=change_balance)
+        await rq.set_status_executor(question_id=question_id,
+                                     tg_id=info_executor.tg_id,
+                                     status=rq.QuestionStatus.completed)
+        await rq.set_question_status(question_id=question_id,
+                                     status=rq.QuestionStatus.completed)
     else:
-        await callback.message.edit_text(text='Благодарим за обратную связь, постараемся решить вашу проблему!',
+        info_executor: Executor = await rq.get_executor(question_id=question_id,
+                                                        tg_id=question.partner_solution)
+        await callback.message.edit_text(text=f'Благодарим за обратную связь, постараемся решить вашу проблему!\n'
+                                              f'Сумма в размере {info_executor.cost} рублей возвращена вам на баланс.\n'
+                                              f'Вопрос снова разослан специалистам.\n'
+                                              f'Диалог между вами и клиентом закрыт',
                                          reply_markup=None)
         await bot.send_message(chat_id=question.partner_solution,
                                text=f"Пользователь #_{info_user.id} "
@@ -87,6 +102,11 @@ async def quality_answer_question(callback: CallbackQuery, state: FSMContext, bo
         change_balance = info_executor.cost
         await rq.update_user_balance(tg_id=callback.from_user.id,
                                      change_balance=change_balance)
+        await rq.set_status_executor(question_id=question_id,
+                                     tg_id=info_executor.tg_id,
+                                     status=rq.QuestionStatus.cancel)
+        await rq.set_question_executor(question_id=question_id,
+                                       executor=0)
     await callback.answer()
 
 

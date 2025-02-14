@@ -110,12 +110,18 @@ async def get_cost_question_partner(message: Message, state: FSMContext, bot: Bo
                                      reply_markup=kb.keyboard_partner_continue_question(question_id=question_id))
         info_question: Question = await rq.get_question_id(question_id=int(question_id))
         info_partner: User = await rq.get_user_by_id(tg_id=message.from_user.id)
+        questions_list: list[Question] = await rq.get_questions_tg_id(partner_solution=message.from_user.id)
+        if len(questions_list):
+            reiting_partner: float = round(sum([question.quality for question in questions_list])/len(questions_list),1)
+        else:
+            reiting_partner: str = '#'
         if info_partner.fullname != "none":
             name_text = info_partner.fullname
         else:
             name_text = f"Специалист #_{info_partner.id}"
         msg_2 = await bot.send_message(chat_id=info_question.tg_id,
-                                       text=f'{name_text} оценил стоимость решения'
+                                       text=f'{name_text}\nРейтинг {reiting_partner}⭐\n'
+                                            f' оценил стоимость решения'
                                             f' вопроса № {question_id} в {message.text} рублей. \n'
                                             f'Для выбора этого специалиста для решения вашего вопроса нажмите "Выбрать" '
                                             f'или ожидайте ответа от других специалистов',

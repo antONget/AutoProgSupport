@@ -23,7 +23,7 @@ class StateReceipt(StatesGroup):
     amount_receipt = State()
 
 
-@router.message(F.text == 'Выставить_счет', )
+@router.message(F.text == 'Выставить_счет', IsRolePartner())
 @error_handler
 async def press_send_receipt(message: Message, state: FSMContext):
     """

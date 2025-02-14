@@ -320,7 +320,7 @@ async def set_question_executor(question_id: int, executor: int) -> None:
     :param executor:
     :return:
     """
-    logging.info('set_question_status')
+    logging.info('set_question_executor')
     async with async_session() as session:
         question = await session.scalar(select(Question).where(Question.id == question_id))
         question.partner_solution = executor
@@ -338,20 +338,21 @@ async def get_question_id(question_id: int) -> Question:
         return await session.scalar(select(Question).where(Question.id == question_id))
 
 
-async def get_question_tg_id(partner_solution: int) -> list[Question]:
+async def get_questions_tg_id(partner_solution: int) -> list[Question]:
     """
-    Получаем вопрос по его id
+    Получаем список завершенных вопросов для конкретного партнера
     :param partner_solution:
     :return:
     """
     logging.info('get_question_id')
     async with async_session() as session:
-        return await session.scalars(select(Question).where(Question.partner_solution == partner_solution))
-
+        questions = await session.scalars(select(Question).where(Question.partner_solution == partner_solution,
+                                                                 Question.status == QuestionStatus.completed))
+        return [question for question in questions]
 
 async def get_questions() -> list[Question]:
     """
-    Получаем вопрос по его id
+    Получаем все вопросы
     :return:
     """
     logging.info('get_question_id')
@@ -372,6 +373,40 @@ async def add_executor(data: dict) -> None:
         new_executor = Executor(**data)
         session.add(new_executor)
         await session.commit()
+
+
+async def set_status_executor(question_id: int, tg_id: int, status: str) -> None:
+    """
+    Обновление статуса исполнителя
+    :param question_id:
+    :param tg_id:
+    :param status:
+    :return:
+    """
+    logging.info('set_question_quality')
+    async with async_session() as session:
+        executor = await session.scalar(select(Executor).where(Executor.id_question == question_id,
+                                                               Executor.tg_id == tg_id))
+        if executor:
+            executor.status = status
+            await session.commit()
+
+
+async def set_executor_comment_cancel(question_id: int, tg_id: int, comment_cancel: str) -> None:
+    """
+    Обновление комментария отказа от вопроса
+    :param question_id:
+    :param tg_id:
+    :param comment_cancel:
+    :return:
+    """
+    logging.info('set_executor_comment_cancel')
+    async with async_session() as session:
+        executor = await session.scalar(select(Executor).where(Executor.id_question == question_id,
+                                                               Executor.tg_id == tg_id))
+        if executor:
+            executor.comment_cancel = comment_cancel
+            await session.commit()
 
 
 async def set_cost_executor(question_id: int, tg_id: int, cost: int) -> None:

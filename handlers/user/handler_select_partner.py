@@ -66,6 +66,8 @@ async def process_selectpartner(callback: CallbackQuery, state: FSMContext, bot:
                                      change_balance=change_balance)
         await state.update_data(id_question=id_question)
         await rq.set_subscribe_user(tg_id=callback.from_user.id)
+        await rq.set_question_status(question_id=int(id_question),
+                                     status=rq.QuestionStatus.work)
         info_user: User = await rq.get_user_by_id(tg_id=info_question.tg_id)
         info_partner: User = await rq.get_user_by_id(tg_id=info_question.partner_solution)
         await callback.message.delete()
@@ -157,6 +159,8 @@ async def check_pay_select_partner(callback: CallbackQuery, state: FSMContext, b
         if config.tg_bot.test == 'TRUE':
             result = True
         if result:
+            await rq.set_question_status(question_id=int(id_question),
+                                         status=rq.QuestionStatus.work)
             info_question: Question = await rq.get_question_id(question_id=int(id_question))
             info_executor: Executor = await rq.get_executor(question_id=int(id_question),
                                                             tg_id=info_question.partner_solution)
@@ -217,6 +221,8 @@ async def check_pay_select_partner(callback: CallbackQuery, state: FSMContext, b
     else:
         id_question: str = callback.data.split('_')[-1]
         tg_id_partner: str = callback.data.split('_')[1]
+        await rq.set_question_status(question_id=int(id_question),
+                                     status=rq.QuestionStatus.work)
         await rq.set_question_executor(question_id=int(id_question),
                                        executor=int(tg_id_partner))
         await state.update_data(id_question=id_question)
