@@ -76,6 +76,19 @@ class Dialog(Base):
     status: Mapped[str] = mapped_column(String)
 
 
+class WithdrawalFunds(Base):
+    __tablename__ = 'withdrawal_funds'
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    tg_id_partner: Mapped[int] = mapped_column(BigInteger)
+    summ_withdrawal_funds: Mapped[int] = mapped_column(Integer)
+    data_withdrawal: Mapped[str] = mapped_column(String)
+    balance_before: Mapped[int] = mapped_column(Integer)
+    data_confirm: Mapped[str] = mapped_column(String, default='')
+    balance_after: Mapped[int] = mapped_column(Integer, default=0)
+    tg_id_admin: Mapped[int] = mapped_column(BigInteger, default=0)
+    status: Mapped[str] = mapped_column(String)
+
+
 async def async_main():
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)

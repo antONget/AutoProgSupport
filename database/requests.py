@@ -1,4 +1,4 @@
-from database.models import User, async_session, Subscribe, Rate, Question, Executor, Dialog
+from database.models import User, async_session, Subscribe, Rate, Question, Executor, Dialog, WithdrawalFunds
 from sqlalchemy import select, or_, and_
 import logging
 from dataclasses import dataclass
@@ -350,6 +350,7 @@ async def get_questions_tg_id(partner_solution: int) -> list[Question]:
                                                                  Question.status == QuestionStatus.completed))
         return [question for question in questions]
 
+
 async def get_questions() -> list[Question]:
     """
     Получаем все вопросы
@@ -597,3 +598,64 @@ async def set_dialog_completed_tg_id(tg_id: int) -> None:
         if dialog:
             dialog.status = StatusDialog.completed
             await session.commit()
+
+
+""" WithdrawalFunds """
+
+
+@dataclass
+class StatusWithdrawalFunds:
+    create = 'create'
+    completed = 'confirm'
+    cancel = 'cancel'
+
+
+async def add_withdrawal_funds(data: dict) -> int:
+    """
+    Добавление нового запроса на вывод средств
+    :param data:
+    :return:
+    """
+    logging.info(f'add_withdrawal_funds')
+    async with async_session() as session:
+        new_withdrawal_funds = WithdrawalFunds(**data)
+        session.add(new_withdrawal_funds)
+        await session.flush()
+        id_ = new_withdrawal_funds.id
+        await session.commit()
+        return id_
+
+
+async def set_withdrawal_funds_status(id_: int, status: str, balance_after: int, tg_id_admin: int) -> None:
+    """
+    Обновляем поля запроса на вывод средств
+    :param id_:
+    :param status:
+    :param balance_after:
+    :param tg_id_admin:
+    :return:
+    """
+    logging.info('set_dialog_completed_tg_id')
+    async with async_session() as session:
+        withdrawal_funds: WithdrawalFunds = await session.scalar(select(WithdrawalFunds).filter(WithdrawalFunds.id == id_))
+        if withdrawal_funds:
+            withdrawal_funds.status = status
+            current_date = datetime.now().strftime('%d.%m.%Y %H:%M')
+            withdrawal_funds.data_confirm = current_date
+            withdrawal_funds.balance_after = balance_after
+            withdrawal_funds.tg_id_admin = tg_id_admin
+            await session.commit()
+
+
+async def get_withdrawal_funds_id(id_: int) -> WithdrawalFunds:
+    """
+    Получаем запрос на списание средств
+    :param id_:
+    :return:
+    """
+    logging.info('set_dialog_completed_tg_id')
+    async with async_session() as session:
+        withdrawal_fund: WithdrawalFunds = await session.scalar(select(WithdrawalFunds).
+                                                                filter(WithdrawalFunds.id == id_))
+        if withdrawal_fund:
+            return withdrawal_fund

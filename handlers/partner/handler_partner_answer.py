@@ -112,7 +112,7 @@ async def get_cost_question_partner(message: Message, state: FSMContext, bot: Bo
         info_partner: User = await rq.get_user_by_id(tg_id=message.from_user.id)
         questions_list: list[Question] = await rq.get_questions_tg_id(partner_solution=message.from_user.id)
         if len(questions_list):
-            reiting_partner: float = round(sum([question.quality for question in questions_list])/len(questions_list),1)
+            reiting_partner: float = round(sum([question.quality for question in questions_list])/len(questions_list), 1)
         else:
             reiting_partner: str = '#'
         if info_partner.fullname != "none":
