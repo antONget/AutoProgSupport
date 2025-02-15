@@ -4,7 +4,7 @@ from aiogram.enums import ParseMode
 
 from config_data.config import Config, load_config
 from handlers import error, other_handlers, start_handler
-from handlers.admin import handler_edit_list_personal, handler_edit_list_rate
+from handlers.admin import handler_edit_list_personal, handler_edit_list_rate, handler_withdrawal_funds
 from handlers.partner import handler_partner_answer, handler_dialog_partner, handler_report, handler_account, \
     handler_send_receipt, handler_cancel_question
 from handlers.user import handler_rates, handler_user_quality_answer, handler_send_question, handler_my_rate,\
@@ -47,7 +47,8 @@ async def main():
     dp.include_router(error.router)
     dp.include_router(start_handler.router)
     dp.include_routers(handler_edit_list_personal.router,
-                       handler_edit_list_rate.router)
+                       handler_edit_list_rate.router,
+                       handler_withdrawal_funds.router)
     dp.include_routers(handler_partner_answer.router,
                        handler_dialog_partner.router,
                        handler_report.router,

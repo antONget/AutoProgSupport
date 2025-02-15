@@ -140,7 +140,7 @@ async def get_withdrawal_funds(message: Message, state: FSMContext, bot: Bot):
     if summ_funds.isdigit():
         info_partner: User = await rq.get_user_by_id(tg_id=message.from_user.id)
         current_balance = info_partner.balance
-        if int(summ_funds) > current_balance:
+        if int(summ_funds) < current_balance:
             if info_partner.fullname != "none":
                 name_text = info_partner.fullname
             else:
@@ -150,14 +150,16 @@ async def get_withdrawal_funds(message: Message, state: FSMContext, bot: Bot):
                                      "data_withdrawal": datetime.now().strftime('%d.%m.%Y %H:%M'),
                                      "balance_before": current_balance}
             id_: int = await rq.add_withdrawal_funds(data=dict_withdrawal_funds)
-            await bot.send_message(chat_id=1492644981,
-                                   text=f'Партнер <a href="tg://user?id={message.from_user.id}>{name_text}</a> '
+            await bot.send_message(chat_id=843554518,
+                                   text=f'Партнер <a href="tg://user?id={message.from_user.id}">{name_text}</a> '
                                         f'запросил вывод средств в размере {summ_funds}, на балансе партнера '
                                         f'{current_balance} ₽',
                                    reply_markup=kb.keyboard_request_withdrawal_funds(id_=id_,
                                                                                      summ_funds=summ_funds))
             await message.answer(text=f'Запрос на вывод средств отправлен администратору')
-        await state.set_state(state=None)
+            await state.set_state(state=None)
+        else:
+            await message.answer(text='Сумма указана не корректна, повторите ввод')
     else:
         await message.answer(text='Сумма указана не корректна, повторите ввод')
 

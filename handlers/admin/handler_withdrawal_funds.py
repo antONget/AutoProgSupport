@@ -33,7 +33,7 @@ async def process_withdrawalfunds_admin(callback: CallbackQuery, state: FSMConte
     info_partner: User = await rq.get_user_by_id(tg_id=info_withdrawal_funds.tg_id_partner)
     if action == 'cancel':
         await callback.message.edit_text(text=f'Вы отклонили списание для'
-                                              f' <a href="tg://user?id={info_partner.tg_id}>партнера</a>')
+                                              f' <a href="tg://user?id={info_partner.tg_id}">партнера</a>')
         await bot.send_message(chat_id=info_partner.tg_id,
                                text='Администратор отклонил списание')
         await rq.set_withdrawal_funds_status(id_=id_withdrawal_funds,
@@ -42,12 +42,12 @@ async def process_withdrawalfunds_admin(callback: CallbackQuery, state: FSMConte
                                              tg_id_admin=callback.from_user.id)
     elif action == 'confirm':
         await callback.message.edit_text(text=f'Вы подтвердили списание для'
-                                              f' <a href="tg://user?id={info_partner.tg_id}>партнера</a>'
+                                              f' <a href="tg://user?id={info_partner.tg_id}">партнера</a>'
                                               f' на сумму {summ_funds} ₽')
         await bot.send_message(chat_id=info_partner.tg_id,
                                text=f'Администратор подтвердил списание {summ_funds} ₽')
         await rq.update_user_balance(tg_id=info_partner.tg_id,
-                                     change_balance=summ_funds)
+                                     change_balance=summ_funds * -1)
         info_partner: User = await rq.get_user_by_id(tg_id=info_withdrawal_funds.tg_id_partner)
         await rq.set_withdrawal_funds_status(id_=id_withdrawal_funds,
                                              status=rq.StatusWithdrawalFunds.completed,

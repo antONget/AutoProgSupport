@@ -86,7 +86,7 @@ class WithdrawalFunds(Base):
     data_confirm: Mapped[str] = mapped_column(String, default='')
     balance_after: Mapped[int] = mapped_column(Integer, default=0)
     tg_id_admin: Mapped[int] = mapped_column(BigInteger, default=0)
-    status: Mapped[str] = mapped_column(String)
+    status: Mapped[str] = mapped_column(String, default='create')
 
 
 async def async_main():

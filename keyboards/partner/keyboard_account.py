@@ -27,7 +27,7 @@ def keyboard_request_withdrawal_funds(id_: int, summ_funds: str) -> InlineKeyboa
     :return:
     """
     logging.info("keyboard_request_withdrawal_funds")
-    button_1 = InlineKeyboardButton(text=f'Списать {summ_funds} ',
+    button_1 = InlineKeyboardButton(text=f'Списать {summ_funds} ₽',
                                     callback_data=f'withdrawalfunds_confirm_{id_}_{summ_funds}')
     button_2 = InlineKeyboardButton(text=f'Отклонить',
                                     callback_data=f'withdrawalfunds_cancel_{id_}_{summ_funds}')
