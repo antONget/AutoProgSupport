@@ -1,4 +1,4 @@
-from database.models import User, async_session, Subscribe, Rate, Question, Executor, Dialog, WithdrawalFunds
+from database.models import User, async_session, Subscribe, Rate, Question, Executor, Dialog, WithdrawalFunds, Greeting
 from sqlalchemy import select, or_, and_
 import logging
 from dataclasses import dataclass
@@ -659,3 +659,16 @@ async def get_withdrawal_funds_id(id_: int) -> WithdrawalFunds:
                                                                 filter(WithdrawalFunds.id == id_))
         if withdrawal_fund:
             return withdrawal_fund
+
+
+""" GREETING """
+
+
+async def get_greeting() -> Greeting:
+    """
+    Получаем приветствие
+    :return:
+    """
+    logging.info('get_greeting')
+    async with async_session() as session:
+        return await session.scalar(select(Greeting))

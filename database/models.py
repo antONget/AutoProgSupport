@@ -89,6 +89,12 @@ class WithdrawalFunds(Base):
     status: Mapped[str] = mapped_column(String, default='create')
 
 
+class Greeting(Base):
+    __tablename__ = 'greeting'
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    greet_text: Mapped[str] = mapped_column(String)
+
+
 async def async_main():
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)

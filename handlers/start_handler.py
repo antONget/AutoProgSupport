@@ -7,7 +7,7 @@ from aiogram.fsm.context import FSMContext
 from keyboards import start_keyboard as kb
 from config_data.config import Config, load_config
 from database import requests as rq
-from database.models import User, Subscribe, Rate, Dialog
+from database.models import User, Subscribe, Rate, Dialog, Greeting
 from utils.error_handling import error_handler
 from filter.admin_filter import check_super_admin
 
@@ -53,6 +53,7 @@ async def process_start_command_user(message: Message, state: FSMContext, bot: B
         await rq.add_user(data=data_user)
     # вывод клавиатуры в зависимости от роли пользователя
     user: User = await rq.get_user_by_id(tg_id=message.from_user.id)
+    greet: Greeting = await rq.get_greeting()
     # пользователь
     if user.role == rq.UserRole.user:
         # проверка на наличие активной подписки
@@ -71,7 +72,7 @@ async def process_start_command_user(message: Message, state: FSMContext, bot: B
                     active_subscribe = True
         # если нет подписок или подписки не активны
         if not subscribes or not active_subscribe:
-            await message.answer(text=f'Приветственное сообщение! Описание того для чего предназначен этот бот',
+            await message.answer(text=f'{greet.greet_text}',
                                  reply_markup=kb.keyboard_start(role=rq.UserRole.user))
         else:
             last_subscribe: Subscribe = subscribes[-1]
@@ -83,12 +84,12 @@ async def process_start_command_user(message: Message, state: FSMContext, bot: B
                                  reply_markup=kb.keyboard_start(role=rq.UserRole.user))
     # партнер
     elif user.role == rq.UserRole.partner:
-        await message.answer(text=f'Добро пожаловать! Вы являетесь ПАРТНЕРОМ проекта',
+        await message.answer(text=f'{greet.greet_text}\n\nВы являетесь ПАРТНЕРОМ проекта',
                              reply_markup=kb.keyboard_start(role=rq.UserRole.partner))
 
     # администратор
     elif user.role == rq.UserRole.admin:
-        await message.answer(text=f'Добро пожаловать! Вы являетесь АДМИНИСТРАТОРОМ проекта',
+        await message.answer(text=f'{greet.greet_text}\n\nВы являетесь АДМИНИСТРАТОРОМ проекта',
                              reply_markup=kb.keyboard_start(role=rq.UserRole.admin))
     if await check_super_admin(telegram_id=message.from_user.id):
         await message.answer(text=f'Изменить свою роль?',
