@@ -98,12 +98,13 @@ async def get_amount_receipt(message: Message, state: FSMContext, bot: Bot):
 async def check_pay_receipt(callback: CallbackQuery, state: FSMContext, bot: Bot):
     """
     Проверка оплаты
-    :param callback:
+    :param callback: sendreceipt_{amount}_{id_question}_{payment_id}
+                     debited_{amount}_{id_question}_{payment_id}
     :param state:
     :param bot:
     :return:
     """
-    logging.info(f'check_pay_receipt {callback.message.chat.id}')
+    logging.info(f'check_pay_receipt {callback.message.chat.id} {callback.data}')
     payment_id: str = callback.data.split('_')[-1]
     id_question: str = callback.data.split('_')[-2]
     amount_receipt: int = int(callback.data.split('_')[-3])

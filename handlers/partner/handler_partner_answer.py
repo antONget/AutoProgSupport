@@ -46,9 +46,12 @@ async def partner_answer(callback: CallbackQuery, state: FSMContext, bot: Bot):
         question: Question = await rq.get_question_id(question_id=int(question_id))
         executor: Executor = await rq.get_executor(question_id=question.id,
                                                    tg_id=callback.from_user.id)
+        await rq.set_status_executor(question_id=int(question_id),
+                                     tg_id=callback.from_user.id,
+                                     status=rq.ExecutorStatus.cancel)
         await callback.message.edit_text(text=f"Вы отказались от вопроса №{question.id}",
                                          reply_markup=None)
-        partner_info: User = await rq.get_user_by_id(tg_id=executor.tg_id)
+        partner_info: User = await rq.get_user_by_id(tg_id=callback.from_user.id)
         if executor.message_id_cost:
             if partner_info.fullname != "none":
                 name_text = partner_info.fullname
@@ -69,10 +72,10 @@ async def partner_answer(callback: CallbackQuery, state: FSMContext, bot: Bot):
                                    text=f'{name_text} отказался от решения вопроса №{question.id}')
         # list_partner: list[User] = await rq.get_users_role(role=rq.UserRole.partner)
         # await mailing_list_partner(callback=callback, list_partner=list_partner, question_id=int(question_id), bot=bot)
-    elif answer == 'ask':
-        question: Question = await rq.get_question_id(question_id=int(question_id))
-        await callback.message.answer(text=f'Пришлите, что вы хотите уточнить по вопросу № {question_id} у пользователя'
-                                           f' #_{question.tg_id}')
+    # elif answer == 'ask':
+    #     question: Question = await rq.get_question_id(question_id=int(question_id))
+    #     await callback.message.answer(text=f'Пришлите, что вы хотите уточнить по вопросу № {question_id} у пользователя'
+    #                                        f' #_{question.tg_id}')
         # await rq.set_question_status(question_id=int(question_id),
         #                              status=rq.QuestionStatus.completed)
         # await rq.set_question_completed(question_id=int(question_id), partner=callback.from_user.id)
@@ -88,7 +91,7 @@ async def partner_answer(callback: CallbackQuery, state: FSMContext, bot: Bot):
 @error_handler
 async def get_cost_question_partner(message: Message, state: FSMContext, bot: Bot):
     """
-    Получаем стоимость решения вопроса для отправки пользолвателю
+    Получаем стоимость решения вопроса для отправки пользователю
     :param message:
     :param state:
     :param bot:
@@ -100,6 +103,9 @@ async def get_cost_question_partner(message: Message, state: FSMContext, bot: Bo
     question_id = data['question_id']
     await message.delete()
     if cost.isdigit() and int(cost) > 0:
+        await rq.set_cost_executor(question_id=question_id,
+                                   tg_id=message.from_user.id,
+                                   cost=int(cost))
         try:
             await bot.delete_message(chat_id=message.from_user.id,
                                      message_id=message.message_id - 1)
@@ -135,10 +141,6 @@ async def get_cost_question_partner(message: Message, state: FSMContext, bot: Bo
                                          message_id=info_executor.message_id_cost)
             except:
                 pass
-
-        await rq.set_cost_executor(question_id=question_id,
-                                   tg_id=message.from_user.id,
-                                   cost=int(cost))
         await rq.set_message_id_cost_executor(question_id=question_id,
                                               tg_id=message.from_user.id,
                                               message_id_cost=msg_2.message_id)

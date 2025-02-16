@@ -66,6 +66,10 @@ async def get_summ_replenish(message: Message, state: FSMContext, bot: Bot):
     """
     logging.info('get_summ_replenish')
     summ_replenish = message.text
+    if summ_replenish in ['Тарифы', 'Задать вопрос', 'Баланс']:
+        await state.set_state(state=None)
+        await message.answer(text='Пополнение баланса отменено')
+        return
     if summ_replenish.isdigit() and int(summ_replenish) > 0:
         quickpay_base_url, quickpay_redirected_url, payment_id = await yoomany_payment(amount=int(summ_replenish))
         await message.answer(text=f'Счет на пополнение баланса. Произведите пополнение и нажмите "Продолжить"',

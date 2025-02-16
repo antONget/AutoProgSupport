@@ -67,7 +67,8 @@ async def mailing_list_partner(list_partner: list, question_id: int, bot: Bot):
     if list_partner:
         for partner in list_partner:
             info_dialog: Dialog = await rq.get_dialog_active_tg_id(tg_id=partner.tg_id)
-            if info_dialog:
+            info_executor: Executor = await rq.get_executor(question_id=question_id, tg_id=partner.tg_id)
+            if info_dialog or (info_executor and info_executor.status == rq.ExecutorStatus.cancel):
                 continue
                 # получаем информацию о вопросе
             question: Question = await rq.get_question_id(question_id=question_id)
@@ -158,7 +159,6 @@ async def get_reason_cancel_question(message: Message, state: FSMContext, bot: B
                                  change_balance=info_executor.cost)
 
     list_partner: list[User] = await rq.get_users_role(role=rq.UserRole.partner)
-    list_partner_not_cancel: list[User] = [partner for partner in list_partner if partner.tg_id != message.from_user.id]
-    await mailing_list_partner(list_partner=list_partner_not_cancel,
+    await mailing_list_partner(list_partner=list_partner,
                                question_id=info_question.id,
                                bot=bot)

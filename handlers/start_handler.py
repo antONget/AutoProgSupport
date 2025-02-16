@@ -2,6 +2,7 @@ from aiogram import Router, F, Bot
 from aiogram.filters import CommandStart, StateFilter, or_f
 from aiogram.types import Message, CallbackQuery, ReplyKeyboardRemove, PreCheckoutQuery
 from aiogram.fsm.context import FSMContext
+from aiogram.fsm.state import State, StatesGroup
 
 
 from keyboards import start_keyboard as kb
@@ -9,13 +10,18 @@ from config_data.config import Config, load_config
 from database import requests as rq
 from database.models import User, Subscribe, Rate, Dialog, Greeting
 from utils.error_handling import error_handler
-from filter.admin_filter import check_super_admin
+from filter.admin_filter import check_super_admin, IsSuperAdmin
+from filter.user_filter import check_role
 
 import logging
 from datetime import datetime
 
 router = Router()
 config: Config = load_config()
+
+
+class StateGreet(StatesGroup):
+    greet = State()
 
 
 @router.message(CommandStart())
@@ -53,6 +59,15 @@ async def process_start_command_user(message: Message, state: FSMContext, bot: B
         await rq.add_user(data=data_user)
     # вывод клавиатуры в зависимости от роли пользователя
     user: User = await rq.get_user_by_id(tg_id=message.from_user.id)
+    if not user.offer_agreement:
+        await message.answer(text='🔒 Согласие с договором оферты\n\n'
+                                  'Перед тем как продолжить, пожалуйста, ознакомьтесь с условиями нашего договора'
+                                  ' оферты. Вы можете <a href="https://telegra.ph/DOGOVOR-OFERTY-02-16-3">'
+                                  'просмотреть договор.</a>\n\n'
+                                  'Если вы согласны с условиями, нажмите кнопку «Согласен»,'
+                                  ' чтобы подтвердить свое согласие и продолжить использование наших услуг.',
+                             reply_markup=kb.keyboard_offer_agreement())
+        return
     greet: Greeting = await rq.get_greeting()
     # пользователь
     if user.role == rq.UserRole.user:
@@ -94,9 +109,14 @@ async def process_start_command_user(message: Message, state: FSMContext, bot: B
     if await check_super_admin(telegram_id=message.from_user.id):
         await message.answer(text=f'Изменить свою роль?',
                              reply_markup=kb.keyboard_change_role_admin())
+    elif await check_role(tg_id=message.from_user.id,
+                          role=rq.UserRole.partner):
+        await message.answer(text=f'Изменить свою роль?',
+                             reply_markup=kb.keyboard_change_role_admin())
 
 
 @router.callback_query(F.data == 'change_role_admin')
+@router.callback_query(F.data == 'change_role_partner')
 @error_handler
 async def change_role_admin(callback: CallbackQuery, state: FSMContext, bot: Bot):
     """
@@ -107,8 +127,12 @@ async def change_role_admin(callback: CallbackQuery, state: FSMContext, bot: Bot
     :return:
     """
     logging.info('change_role_admin')
-    await callback.message.edit_text(text=f'Какую роль установить?',
-                                     reply_markup=kb.keyboard_select_role_admin())
+    if await check_super_admin(telegram_id=callback.from_user.id):
+        await callback.message.edit_text(text=f'Какую роль установить?',
+                                         reply_markup=kb.keyboard_select_role_admin())
+    elif await check_role(tg_id=callback.from_user.id, role=rq.UserRole.partner):
+        await callback.message.edit_text(text=f'Какую роль установить?',
+                                         reply_markup=kb.keyboard_select_role_partner())
 
 
 @router.callback_query(F.data.startswith('select_role_'))
@@ -127,3 +151,102 @@ async def change_role_admin_select_role(callback: CallbackQuery, state: FSMConte
     await callback.message.edit_text(text=f'Роль {select_role.upper()} успешно установлена',
                                      reply_markup=None)
     await process_start_command_user(message=callback.message, state=state, bot=bot)
+
+
+@router.message(F.text == '/change_greeting', IsSuperAdmin())
+@error_handler
+async def change_greeting(message: Message, state: FSMContext, bot: Bot):
+    """
+    Обновление приветствия
+    :param message:
+    :param state:
+    :param bot:
+    :return:
+    """
+    logging.info('change_greeting')
+    await message.answer(text='Пришлите новое приветствие или пришлите /cancel')
+    await state.set_state(StateGreet.greet)
+
+
+@router.message(F.text, StateFilter(StateGreet.greet))
+@error_handler
+async def get_greet(message: Message, state: FSMContext, bot: Bot):
+    """
+    Получаем новое приветствие
+    :param message:
+    :param state:
+    :param bot:
+    :return:
+    """
+    logging.info('get_greet')
+    greeting = message.html_text
+    await state.set_state(state=None)
+    if greeting == '/cancel':
+        await message.answer(text='Обновление приветствия отменено')
+        return
+    else:
+        await rq.set_greeting(greet_text=greeting)
+        await message.answer(text='Приветствие обновлено')
+
+
+@router.callback_query(F.data.startswith('offer_agreement_'))
+@error_handler
+async def offer_agreement_confirm(callback: CallbackQuery, state: FSMContext, bot: Bot):
+    """
+    Договор оферты
+    :param callback:
+    :param state:
+    :param bot:
+    :return:
+    """
+    logging.info('offer_agreement_confirm')
+    action = callback.data.split('_')[-1]
+    if action == 'confirm':
+        await rq.set_offer_agreement(tg_id=callback.from_user.id)
+        greet: Greeting = await rq.get_greeting()
+        user: User = await rq.get_user_by_id(tg_id=callback.from_user.id)
+        # пользователь
+        if user.role == rq.UserRole.user:
+            # проверка на наличие активной подписки
+            subscribes: list[Subscribe] = await rq.get_subscribes_user(tg_id=callback.from_user.id)
+            active_subscribe = False
+            if subscribes:
+                last_subscribe: Subscribe = subscribes[-1]
+                date_format = '%d-%m-%Y %H:%M'
+                current_date = datetime.now().strftime('%d-%m-%Y %H:%M')
+                delta_time = (datetime.strptime(current_date, date_format) -
+                              datetime.strptime(last_subscribe.date_completion, date_format))
+                rate: Rate = await rq.get_rate_id(rate_id=last_subscribe.rate_id)
+                if delta_time.days < rate.duration_rate:
+                    rate: Rate = await rq.get_rate_id(rate_id=last_subscribe.rate_id)
+                    if last_subscribe.count_question < rate.question_rate:
+                        active_subscribe = True
+            # если нет подписок или подписки не активны
+            if not subscribes or not active_subscribe:
+                await callback.message.answer(text=f'{greet.greet_text}',
+                                              reply_markup=kb.keyboard_start(role=rq.UserRole.user))
+            else:
+                last_subscribe: Subscribe = subscribes[-1]
+                rate_info: Rate = await rq.get_rate_id(rate_id=last_subscribe.rate_id)
+                await callback.message.answer(text=f'Добро пожаловать, {callback.from_user.username}!\n\n'
+                                                   f'<b>Ваш тариф:</b> {rate_info.title_rate}\n'
+                                                   f'<b>Срок подписки:</b> {last_subscribe.date_completion}\n'
+                                                   f'<b>Количество вопросов:</b> {last_subscribe.count_question}/{rate_info.question_rate}',
+                                              reply_markup=kb.keyboard_start(role=rq.UserRole.user))
+        # партнер
+        elif user.role == rq.UserRole.partner:
+            await callback.message.answer(text=f'{greet.greet_text}\n\nВы являетесь ПАРТНЕРОМ проекта',
+                                          reply_markup=kb.keyboard_start(role=rq.UserRole.partner))
+
+        # администратор
+        elif user.role == rq.UserRole.admin:
+            await callback.message.answer(text=f'{greet.greet_text}\n\nВы являетесь АДМИНИСТРАТОРОМ проекта',
+                                          reply_markup=kb.keyboard_start(role=rq.UserRole.admin))
+        if await check_super_admin(telegram_id=callback.from_user.id):
+            await callback.message.answer(text=f'Изменить свою роль?',
+                                          reply_markup=kb.keyboard_change_role_admin())
+        elif await check_role(tg_id=callback.from_user.id,
+                              role=rq.UserRole.partner):
+            await callback.message.answer(text=f'Изменить свою роль?',
+                                          reply_markup=kb.keyboard_change_role_admin())
+    await callback.answer()

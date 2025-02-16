@@ -6,7 +6,7 @@ from aiogram.filters import StateFilter, or_f
 
 import keyboards.user.keyboard_user_quality_answer as kb
 import database.requests as rq
-from database.models import User, Rate, Subscribe, Question, Executor
+from database.models import User, Rate, Subscribe, Question, Executor, Dialog
 from utils.error_handling import error_handler
 from utils.send_admins import send_message_admins
 
@@ -24,6 +24,69 @@ router.message.filter(F.chat.type == "private")
 
 class StageQuality(StatesGroup):
     state_comment = State()
+
+
+async def create_post_content(question: Question, partner: User, id_question: int, text: str, bot: Bot):
+    """
+    Функция для формирования поста с вопросом в зависимости от полученного контента
+    :param question:
+    :param partner:
+    :param id_question:
+    :param text:
+    :param bot:
+    :return:
+    """
+    logging.info('create_post_content')
+    content_id: str = question.content_ids
+    # формируем пост для рассылки
+    if question.content_ids == '':
+        await bot.send_message(chat_id=partner.tg_id,
+                               text=question.description)
+    else:
+        typy_file = content_id.split('!')[0]
+        if typy_file == 'photo':
+            await bot.send_photo(chat_id=partner.tg_id,
+                                 photo=content_id.split('!')[1],
+                                 caption=question.description)
+        elif typy_file == 'file':
+            await bot.send_document(chat_id=partner.tg_id,
+                                    document=content_id.split('!')[1],
+                                    caption=question.description)
+    msg = await bot.send_message(chat_id=partner.tg_id,
+                                 text=text,
+                                 reply_markup=kb.keyboard_partner_begin_question(question_id=id_question))
+    return msg
+
+
+async def mailing_list_partner(list_partner: list, question_id: int, bot: Bot):
+    """
+    Запуск рассылки по партнерам
+    :param list_partner:
+    :param question_id:
+    :param bot:
+    :return:
+    """
+    logging.info('mailing_list_partner')
+    if list_partner:
+        for partner in list_partner:
+            info_dialog: Dialog = await rq.get_dialog_active_tg_id(tg_id=partner.tg_id)
+            info_executor: Executor = await rq.get_executor(question_id=question_id, tg_id=partner.tg_id)
+            if info_dialog or (info_executor and info_executor.status == rq.ExecutorStatus.cancel):
+                continue
+                # получаем информацию о вопросе
+            question: Question = await rq.get_question_id(question_id=question_id)
+            user: User = await rq.get_user_by_id(tg_id=question.tg_id)
+            text_1 = f"Поступил вопрос № {question_id} от пользователя #_{user.id}.\n" \
+                     f"Вы можете предложить стоимость решения вопроса," \
+                     f" отказаться от его решения или уточнить детали у заказчика"
+            msg_1 = await create_post_content(question=question, partner=partner, id_question=question_id, text=text_1,
+                                              bot=bot)
+            data_executor = {"tg_id": partner.tg_id,
+                             "message_id": msg_1.message_id,
+                             "id_question": question_id,
+                             "cost": 0,
+                             "status": rq.QuestionStatus.create}
+            await rq.add_executor(data=data_executor)
 
 
 @router.callback_query(F.data.startswith('quality_'))
@@ -107,6 +170,10 @@ async def quality_answer_question(callback: CallbackQuery, state: FSMContext, bo
                                      status=rq.QuestionStatus.cancel)
         await rq.set_question_executor(question_id=question_id,
                                        executor=0)
+        list_partner: list[User] = await rq.get_users_role(role=rq.UserRole.partner)
+        await mailing_list_partner(list_partner=list_partner,
+                                   question_id=question_id,
+                                   bot=bot)
     await callback.answer()
 
 

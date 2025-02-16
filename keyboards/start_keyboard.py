@@ -43,10 +43,41 @@ def keyboard_change_role_admin() -> InlineKeyboardMarkup:
     return keyboard
 
 
+def keyboard_change_role_partner() -> InlineKeyboardMarkup:
+    logging.info("keyboard_change_role_partner")
+    button_1 = InlineKeyboardButton(text='Изменить', callback_data=f'change_role_partner')
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[[button_1]],)
+    return keyboard
+
+
 def keyboard_select_role_admin() -> InlineKeyboardMarkup:
     logging.info("keyboard_select_role_admin")
     button_1 = InlineKeyboardButton(text='Администратор', callback_data=f'select_role_admin')
     button_2 = InlineKeyboardButton(text='Партнер', callback_data=f'select_role_partner')
     button_3 = InlineKeyboardButton(text='Пользователь', callback_data=f'select_role_user')
     keyboard = InlineKeyboardMarkup(inline_keyboard=[[button_1], [button_2], [button_3]])
+    return keyboard
+
+
+def keyboard_select_role_partner() -> InlineKeyboardMarkup:
+    logging.info("keyboard_select_role_partner")
+    button_2 = InlineKeyboardButton(text='Партнер', callback_data=f'select_role_partner')
+    button_3 = InlineKeyboardButton(text='Пользователь', callback_data=f'select_role_user')
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[[button_2], [button_3]])
+    return keyboard
+
+
+def keyboard_offer_agreement() -> InlineKeyboardMarkup:
+    logging.info("keyboard_offer_agreement")
+    button_1 = InlineKeyboardButton(text='Согласен', callback_data=f'offer_agreement_confirm')
+    button_2 = InlineKeyboardButton(text='Продолжить', callback_data=f'offer_agreement_continue')
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[[button_1], [button_2]])
+    return keyboard
+
+
+def keyboard_offer_agreement() -> InlineKeyboardMarkup:
+    logging.info("keyboard_offer_agreement")
+    button_1 = InlineKeyboardButton(text='Согласен', callback_data=f'offer_agreement_confirm')
+    button_2 = InlineKeyboardButton(text='Продолжить', callback_data=f'offer_agreement_continue')
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[[button_1], [button_2]])
     return keyboard

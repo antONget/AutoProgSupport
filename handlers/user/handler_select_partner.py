@@ -54,7 +54,8 @@ async def process_selectpartner(callback: CallbackQuery, state: FSMContext, bot:
             name_text = f"Специалист #_{info_partner.id}"
         await callback.message.edit_text(text=f'{name_text} оценил стоимость решения'
                                               f' вопроса № {id_question} в {info_executor.cost} рублей. \n'
-                                              f'Для выбора этого специалиста для решения вашего вопроса оплатите указанную'
+                                              f'Для выбора этого специалиста для решения вашего вопроса'
+                                              f' оплатите указанную'
                                               f' стоимость и после успешной оплаты нажмите "Продолжить"',
                                          reply_markup=kb.keyboard_payment(payment_url=quickpay_base_url,
                                                                           payment_id=payment_id,
@@ -242,7 +243,7 @@ async def check_pay_select_partner(callback: CallbackQuery, state: FSMContext, b
                                     f'Между вами открыт диалог для решения вопроса,'
                                     f' все ваши сообщения будут перенаправлены ему.\n\n'
                                     f'Для завершения диалога нажмите "Завершить диалог"',
-                               reply_markup=kb.keyboard_finish_dialog())
+                               reply_markup=kb.keyboard_finish_dialog_partner())
         # reply_markup=kb.keyboard_open_dialog_user(id_question=id_question))
         data_dialog = {"tg_id_user": callback.from_user.id,
                        "tg_id_partner": info_question.partner_solution,

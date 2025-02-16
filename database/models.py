@@ -20,6 +20,7 @@ class User(Base):
     fullname: Mapped[str] = mapped_column(String, default='none')
     balance: Mapped[int] = mapped_column(Integer, default=0)
     role: Mapped[str] = mapped_column(String, default='user')
+    offer_agreement: Mapped[int] = mapped_column(Integer, default=0)
 
 
 class Subscribe(Base):

@@ -44,6 +44,20 @@ async def set_user_role(tg_id: int, role: str) -> None:
             await session.commit()
 
 
+async def set_offer_agreement(tg_id: int) -> None:
+    """
+    Обновление согласия с договором оферты
+    :param tg_id:
+    :return:
+    """
+    logging.info('set_user_role')
+    async with async_session() as session:
+        user = await session.scalar(select(User).where(User.tg_id == tg_id))
+        if user:
+            user.offer_agreement = 1
+            await session.commit()
+
+
 async def set_user_fullname(tg_id: int, fullname: str) -> None:
     """
     Обновление роли пользователя
@@ -363,6 +377,15 @@ async def get_questions() -> list[Question]:
 """ EXECUTOR """
 
 
+@dataclass
+class ExecutorStatus:
+    create = "create"
+    work = "work"
+    cancel = "cancel"
+    completed = "completed"
+
+
+
 async def add_executor(data: dict) -> None:
     """
     Добавление исполнителя в рассылку
@@ -672,3 +695,16 @@ async def get_greeting() -> Greeting:
     logging.info('get_greeting')
     async with async_session() as session:
         return await session.scalar(select(Greeting))
+
+
+async def set_greeting(greet_text: str) -> None:
+    """
+    Обновление приветствия
+    :return:
+    """
+    logging.info('set_dialog_completed_tg_id')
+    async with async_session() as session:
+        greeting: Greeting = await session.scalar(select(Greeting))
+        if greeting:
+            greeting.greet_text = greet_text
+            await session.commit()

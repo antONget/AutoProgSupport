@@ -23,3 +23,15 @@ def keyboard_main_menu() -> ReplyKeyboardMarkup:
     keyboard = ReplyKeyboardMarkup(keyboard=[[button_1]],
                                    resize_keyboard=True)
     return keyboard
+
+
+def keyboard_partner_begin_question(question_id: int) -> InlineKeyboardMarkup:
+    """
+    Клавиатура для ответа или отклонения вопроса пользователя
+    :return:
+    """
+    logging.info("keyboard_partner_question")
+    button_1 = InlineKeyboardButton(text='Указать стоимость', callback_data=f'question_cost_{question_id}')
+    button_2 = InlineKeyboardButton(text='Отказаться', callback_data=f'question_reject_{question_id}')
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[[button_2], [button_1]],)
+    return keyboard
