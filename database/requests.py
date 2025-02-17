@@ -1,4 +1,5 @@
-from database.models import User, async_session, Subscribe, Rate, Question, Executor, Dialog, WithdrawalFunds, Greeting
+from database.models import User, async_session, Subscribe, Rate, Question, Executor, Dialog, WithdrawalFunds,\
+    Greeting, Partner
 from sqlalchemy import select, or_, and_
 import logging
 from dataclasses import dataclass
@@ -374,6 +375,20 @@ async def get_questions() -> list[Question]:
     async with async_session() as session:
         return await session.scalars(select(Question))
 
+
+async def get_questions_cancel_create() -> list[Question]:
+    """
+    Получаем все вопросы
+    :return:
+    """
+    logging.info('get_questions_cancel_create')
+    async with async_session() as session:
+        questions = await session.scalars(select(Question).where(or_(Question.status == QuestionStatus.create,
+                                                                     Question.status == QuestionStatus.cancel)))
+        list_question = [question for question in questions]
+        return list_question
+
+
 """ EXECUTOR """
 
 
@@ -708,3 +723,44 @@ async def set_greeting(greet_text: str) -> None:
         if greeting:
             greeting.greet_text = greet_text
             await session.commit()
+
+
+""" PARTNERS """
+
+
+async def add_partner(data: dict) -> None:
+    """
+    Добавление нового партнера
+    :param data:
+    :return:
+    """
+    logging.info(f'add_withdrawal_funds')
+    async with async_session() as session:
+        partner = Partner(**data)
+        session.add(partner)
+        await session.commit()
+
+
+async def get_partners() -> list[Partner]:
+    """
+    Получаем список партнеров
+    :return:
+    """
+    logging.info('get_partners')
+    async with async_session() as session:
+        partners = await session.scalars(select(Partner))
+        list_partners = [partner.tg_id_partner for partner in partners]
+        return list_partners
+
+
+async def del_partner(tg_id: int) -> None:
+    """
+    Удаление партнера
+    :param tg_id:
+    :return:
+    """
+    logging.info(f'add_withdrawal_funds')
+    async with async_session() as session:
+        partner = await session.scalar(select(Partner).where(Partner.tg_id_partner == tg_id))
+        await session.delete(partner)
+        await session.commit()

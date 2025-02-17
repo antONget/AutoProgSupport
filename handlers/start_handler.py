@@ -8,7 +8,7 @@ from aiogram.fsm.state import State, StatesGroup
 from keyboards import start_keyboard as kb
 from config_data.config import Config, load_config
 from database import requests as rq
-from database.models import User, Subscribe, Rate, Dialog, Greeting
+from database.models import User, Subscribe, Rate, Dialog, Greeting, Partner
 from utils.error_handling import error_handler
 from filter.admin_filter import check_super_admin, IsSuperAdmin
 from filter.user_filter import check_role
@@ -106,13 +106,14 @@ async def process_start_command_user(message: Message, state: FSMContext, bot: B
     elif user.role == rq.UserRole.admin:
         await message.answer(text=f'{greet.greet_text}\n\nВы являетесь АДМИНИСТРАТОРОМ проекта',
                              reply_markup=kb.keyboard_start(role=rq.UserRole.admin))
+
+    list_partner: list[Partner] = await rq.get_partners()
     if await check_super_admin(telegram_id=message.from_user.id):
         await message.answer(text=f'Изменить свою роль?',
                              reply_markup=kb.keyboard_change_role_admin())
-    elif await check_role(tg_id=message.from_user.id,
-                          role=rq.UserRole.partner):
+    elif message.from_user.id in list_partner:
         await message.answer(text=f'Изменить свою роль?',
-                             reply_markup=kb.keyboard_change_role_admin())
+                             reply_markup=kb.keyboard_change_role_partner())
 
 
 @router.callback_query(F.data == 'change_role_admin')
@@ -127,10 +128,11 @@ async def change_role_admin(callback: CallbackQuery, state: FSMContext, bot: Bot
     :return:
     """
     logging.info('change_role_admin')
+    list_partner: list[Partner] = await rq.get_partners()
     if await check_super_admin(telegram_id=callback.from_user.id):
         await callback.message.edit_text(text=f'Какую роль установить?',
                                          reply_markup=kb.keyboard_select_role_admin())
-    elif await check_role(tg_id=callback.from_user.id, role=rq.UserRole.partner):
+    elif callback.from_user.id in list_partner:
         await callback.message.edit_text(text=f'Какую роль установить?',
                                          reply_markup=kb.keyboard_select_role_partner())
 

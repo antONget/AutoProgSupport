@@ -96,6 +96,11 @@ class Greeting(Base):
     greet_text: Mapped[str] = mapped_column(String)
 
 
+class Partner(Base):
+    __tablename__ = 'partners'
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    tg_id_partner: Mapped[int] = mapped_column(BigInteger)
+
 async def async_main():
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)

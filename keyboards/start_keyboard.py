@@ -15,7 +15,8 @@ def keyboard_start(role: str) -> ReplyKeyboardMarkup:
         button_1 = KeyboardButton(text='Тарифы')
         button_2 = KeyboardButton(text='Задать вопрос')
         button_3 = KeyboardButton(text='Баланс')
-        keyboard = ReplyKeyboardMarkup(keyboard=[[button_1], [button_2], [button_3]], resize_keyboard=True)
+        button_4 = KeyboardButton(text='FAQ')
+        keyboard = ReplyKeyboardMarkup(keyboard=[[button_1], [button_2], [button_3], [button_4]], resize_keyboard=True)
     elif role == UserRole.admin:
         button_1 = KeyboardButton(text='Партнеры')
         button_2 = KeyboardButton(text='Отчет')
@@ -25,7 +26,9 @@ def keyboard_start(role: str) -> ReplyKeyboardMarkup:
     elif role == UserRole.partner:
         button_1 = KeyboardButton(text='Отчет')
         button_2 = KeyboardButton(text='Личный кабинет')
-        keyboard = ReplyKeyboardMarkup(keyboard=[[button_1], [button_2]], resize_keyboard=True)
+        button_3 = KeyboardButton(text='Вопросы')
+        button_4 = KeyboardButton(text='FAQ')
+        keyboard = ReplyKeyboardMarkup(keyboard=[[button_1], [button_2], [button_3], [button_4]], resize_keyboard=True)
     return keyboard
 
 
@@ -71,13 +74,13 @@ def keyboard_offer_agreement() -> InlineKeyboardMarkup:
     logging.info("keyboard_offer_agreement")
     button_1 = InlineKeyboardButton(text='Согласен', callback_data=f'offer_agreement_confirm')
     button_2 = InlineKeyboardButton(text='Продолжить', callback_data=f'offer_agreement_continue')
-    keyboard = InlineKeyboardMarkup(inline_keyboard=[[button_1], [button_2]])
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[[button_1]])
     return keyboard
 
 
-def keyboard_offer_agreement() -> InlineKeyboardMarkup:
-    logging.info("keyboard_offer_agreement")
-    button_1 = InlineKeyboardButton(text='Согласен', callback_data=f'offer_agreement_confirm')
-    button_2 = InlineKeyboardButton(text='Продолжить', callback_data=f'offer_agreement_continue')
-    keyboard = InlineKeyboardMarkup(inline_keyboard=[[button_1], [button_2]])
-    return keyboard
+# def keyboard_offer_agreement() -> InlineKeyboardMarkup:
+#     logging.info("keyboard_offer_agreement")
+#     button_1 = InlineKeyboardButton(text='Согласен', callback_data=f'offer_agreement_confirm')
+#     button_2 = InlineKeyboardButton(text='Продолжить', callback_data=f'offer_agreement_continue')
+#     keyboard = InlineKeyboardMarkup(inline_keyboard=[[button_1]])
+#     return keyboard

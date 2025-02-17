@@ -107,6 +107,7 @@ async def get_id_tg_personal(message: Message, state: FSMContext, bot: Bot):
     if user:
         await rq.set_user_role(tg_id=tg_id_personal, role=edit_role)
         await message.answer(text=f'Пользователь @{user.username} добавлен в список {role}')
+        await rq.add_partner(data={"tg_id_partner": tg_id_personal})
         await bot.send_message(chat_id=tg_id_personal,
                                text='Вы назначены партнером в проекте, при необходимости перезапустите бота /start')
         await state.set_state(default_state)
@@ -286,5 +287,6 @@ async def process_del_personal_list(callback: CallbackQuery, state: FSMContext, 
     role = 'партнеров'
     await rq.set_user_role(tg_id=tg_id, role=rq.UserRole.user)
     await callback.answer(text=f'Пользователь успешно удален из {role}', show_alert=True)
+    await rq.del_partner(tg_id=tg_id)
     await asyncio.sleep(1)
     await process_change_list_personal(message=callback.message, bot=bot)
