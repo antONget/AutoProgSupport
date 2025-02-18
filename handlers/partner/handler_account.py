@@ -6,6 +6,7 @@ from aiogram.filters import StateFilter, or_f
 
 from keyboards.partner import keyboard_account as kb
 from filter.user_filter import IsRolePartnerDB, IsRoleAdmin
+from filter.admin_filter import IsSuperAdmin
 from database import requests as rq
 from database.models import Question, Executor, User
 from utils.error_handling import error_handler
@@ -20,7 +21,7 @@ class StateAccount(StatesGroup):
     withdrawal_funds = State()
 
 
-@router.message(F.text == 'Личный кабинет', or_f(IsRoleAdmin(), IsRolePartnerDB()))
+@router.message(F.text == 'Личный кабинет', or_f(IsSuperAdmin(), IsRolePartnerDB()))
 @error_handler
 async def process_buttons_account(message: Message, state: FSMContext, bot: Bot):
     """

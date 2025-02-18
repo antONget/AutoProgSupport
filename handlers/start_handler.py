@@ -88,8 +88,8 @@ async def process_start_command_user(message: Message, state: FSMContext, bot: B
         # если нет подписок или подписки не активны
         if not subscribes or not active_subscribe:
             await message.answer(text=f'{greet.greet_text}',
-                                 reply_markup= await kb.keyboard_start(role=rq.UserRole.user,
-                                                                       tg_id=message.from_user.id))
+                                 reply_markup=await kb.keyboard_start(role=rq.UserRole.user,
+                                                                      tg_id=message.from_user.id))
         else:
             last_subscribe: Subscribe = subscribes[-1]
             rate_info: Rate = await rq.get_rate_id(rate_id=last_subscribe.rate_id)
@@ -230,7 +230,7 @@ async def offer_agreement_confirm(callback: CallbackQuery, state: FSMContext, bo
             # если нет подписок или подписки не активны
             if not subscribes or not active_subscribe:
                 await callback.message.answer(text=f'{greet.greet_text}',
-                                              reply_markup=kb.keyboard_start(role=rq.UserRole.user))
+                                              reply_markup=await kb.keyboard_start(role=rq.UserRole.user, tg_id=callback.from_user.id))
             else:
                 last_subscribe: Subscribe = subscribes[-1]
                 rate_info: Rate = await rq.get_rate_id(rate_id=last_subscribe.rate_id)
@@ -238,21 +238,24 @@ async def offer_agreement_confirm(callback: CallbackQuery, state: FSMContext, bo
                                                    f'<b>Ваш тариф:</b> {rate_info.title_rate}\n'
                                                    f'<b>Срок подписки:</b> {last_subscribe.date_completion}\n'
                                                    f'<b>Количество вопросов:</b> {last_subscribe.count_question}/{rate_info.question_rate}',
-                                              reply_markup=kb.keyboard_start(role=rq.UserRole.user))
+                                              reply_markup=await kb.keyboard_start(role=rq.UserRole.user,
+                                                                                   tg_id=callback.from_user.id))
         # партнер
         elif user.role == rq.UserRole.partner:
             await callback.message.answer(text=f'{greet.greet_text}\n\nВы являетесь ПАРТНЕРОМ проекта',
-                                          reply_markup=kb.keyboard_start(role=rq.UserRole.partner))
+                                          reply_markup=await kb.keyboard_start(role=rq.UserRole.partner,
+                                                                               tg_id=callback.from_user.id))
 
         # администратор
         elif user.role == rq.UserRole.admin:
             await callback.message.answer(text=f'{greet.greet_text}\n\nВы являетесь АДМИНИСТРАТОРОМ проекта',
-                                          reply_markup=kb.keyboard_start(role=rq.UserRole.admin))
-        if await check_super_admin(telegram_id=callback.from_user.id):
-            await callback.message.answer(text=f'Изменить свою роль?',
-                                          reply_markup=kb.keyboard_change_role_admin())
-        elif await check_role(tg_id=callback.from_user.id,
-                              role=rq.UserRole.partner):
-            await callback.message.answer(text=f'Изменить свою роль?',
-                                          reply_markup=kb.keyboard_change_role_admin())
+                                          reply_markup=await kb.keyboard_start(role=rq.UserRole.admin,
+                                                                               tg_id=callback.from_user.id))
+        # if await check_super_admin(telegram_id=callback.from_user.id):
+        #     await callback.message.answer(text=f'Изменить свою роль?',
+        #                                   reply_markup=kb.keyboard_change_role_admin())
+        # elif await check_role(tg_id=callback.from_user.id,
+        #                       role=rq.UserRole.partner):
+        #     await callback.message.answer(text=f'Изменить свою роль?',
+        #                                   reply_markup=kb.keyboard_change_role_admin())
     await callback.answer()
