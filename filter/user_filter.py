@@ -1,5 +1,6 @@
 from aiogram.filters import BaseFilter
 from aiogram.types import Message
+from database.models import Partner
 from database import requests as rq
 import logging
 
@@ -25,3 +26,11 @@ class IsRolePartner(BaseFilter):
     async def __call__(self, message: Message) -> bool:
         return await check_role(tg_id=message.chat.id, role=rq.UserRole.partner)
 
+
+class IsRolePartnerDB(BaseFilter):
+    async def __call__(self, message: Message) -> bool:
+        list_partner: list[Partner] = await rq.get_partners()
+        if message.from_user.id in list_partner:
+            return True
+        else:
+            return False

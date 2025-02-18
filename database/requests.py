@@ -736,9 +736,11 @@ async def add_partner(data: dict) -> None:
     """
     logging.info(f'add_withdrawal_funds')
     async with async_session() as session:
-        partner = Partner(**data)
-        session.add(partner)
-        await session.commit()
+        partner = await session.scalar(select(Partner).where(Partner.tg_id_partner == data["tg_id_partner"]))
+        if not partner:
+            partner = Partner(**data)
+            session.add(partner)
+            await session.commit()
 
 
 async def get_partners() -> list[Partner]:

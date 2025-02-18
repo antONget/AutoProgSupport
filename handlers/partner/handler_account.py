@@ -2,10 +2,10 @@ from aiogram.types import CallbackQuery, Message
 from aiogram import F, Router, Bot
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
-from aiogram.filters import StateFilter
+from aiogram.filters import StateFilter, or_f
 
 from keyboards.partner import keyboard_account as kb
-from filter.user_filter import IsRolePartner
+from filter.user_filter import IsRolePartnerDB, IsRoleAdmin
 from database import requests as rq
 from database.models import Question, Executor, User
 from utils.error_handling import error_handler
@@ -20,7 +20,7 @@ class StateAccount(StatesGroup):
     withdrawal_funds = State()
 
 
-@router.message(F.text == 'Личный кабинет', IsRolePartner())
+@router.message(F.text == 'Личный кабинет', or_f(IsRoleAdmin(), IsRolePartnerDB()))
 @error_handler
 async def process_buttons_account(message: Message, state: FSMContext, bot: Bot):
     """
@@ -33,7 +33,7 @@ async def process_buttons_account(message: Message, state: FSMContext, bot: Bot)
     logging.info('process_buttons_account')
     info_partner: User = await rq.get_user_by_id(tg_id=message.from_user.id)
     await message.answer(text=f'В этом разделе ПАРТНЕР может изменить персональные данные, отображаемые пользователям',
-                         reply_markup=kb.keyboard_partner_account(info_partner=info_partner))
+                         reply_markup=await kb.keyboard_partner_account(info_partner=info_partner))
 
 
 @router.callback_query(F.data.startswith('fullname_'))
