@@ -27,7 +27,7 @@ async def keyboard_start(role: str, tg_id: int) -> ReplyKeyboardMarkup:
             keyboard = ReplyKeyboardMarkup(keyboard=[[button_1], [button_2], [button_3], [button_4], [button_5]],
                                            resize_keyboard=True)
         else:
-            keyboard = ReplyKeyboardMarkup(keyboard=[[button_1], [button_2], [button_3], [button_4], [button_6]],
+            keyboard = ReplyKeyboardMarkup(keyboard=[[button_1], [button_2], [button_3], [button_4]],
                                            resize_keyboard=True)
     elif role == UserRole.admin:
         button_1 = KeyboardButton(text='Партнеры')
