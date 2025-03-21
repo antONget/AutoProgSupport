@@ -110,13 +110,13 @@ async def process_start_command_user(message: Message, state: FSMContext, bot: B
                              reply_markup=await kb.keyboard_start(role=rq.UserRole.admin,
                                                                   tg_id=message.from_user.id))
 
-    # list_partner: list[Partner] = await rq.get_partners()
-    # if await check_super_admin(telegram_id=message.from_user.id):
-    #     await message.answer(text=f'Изменить свою роль?',
-    #                          reply_markup=kb.keyboard_change_role_admin())
-    # elif message.from_user.id in list_partner:
-    #     await message.answer(text=f'Изменить свою роль?',
-    #                          reply_markup=kb.keyboard_change_role_partner())
+    list_partner: list[Partner] = await rq.get_partners()
+    if await check_super_admin(telegram_id=message.from_user.id):
+        await message.answer(text=f'Изменить свою роль?',
+                             reply_markup=kb.keyboard_change_role_admin())
+    elif message.from_user.id in list_partner:
+        await message.answer(text=f'Изменить свою роль?',
+                             reply_markup=kb.keyboard_change_role_partner())
 
 
 @router.callback_query(F.data == 'change_role_admin')
