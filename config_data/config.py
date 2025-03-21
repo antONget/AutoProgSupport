@@ -14,6 +14,8 @@ class TgBot:
     yookassa_key: str
     test: str
     group_topic: int
+    api_key_openai: str
+    assistant_id: str
 
 
 @dataclass
@@ -33,4 +35,6 @@ def load_config(path: str = None) -> Config:
                                yookassa_id=env('YOOKASSA_ID'),
                                yookassa_key=env('YOOKASSA_KEY'),
                                test=env('TEST'),
-                               group_topic=env('GROUP_TOPIC')))
+                               group_topic=env('GROUP_TOPIC'),
+                               api_key_openai=env('API_KEY_OPENAI'),
+                               assistant_id=env('ASSISTANT_ID')))

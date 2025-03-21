@@ -8,7 +8,7 @@ from handlers.admin import handler_edit_list_personal, handler_edit_list_rate, h
 from handlers.partner import handler_partner_answer, handler_dialog_partner, handler_report, handler_account, \
     handler_send_receipt, handler_cancel_question, handler_questions
 from handlers.user import handler_rates, handler_user_quality_answer, handler_send_question, handler_my_rate,\
-    handler_select_partner, handler_balance, handler_FAQ
+    handler_select_partner, handler_balance, handler_FAQ, handler_neero
 from notify_admins import on_startup_notify
 from database.models import async_main
 
@@ -62,7 +62,8 @@ async def main():
                        handler_my_rate.router,
                        handler_send_question.router,
                        handler_user_quality_answer.router,
-                       handler_select_partner.router)
+                       handler_select_partner.router,
+                       )
     dp.include_router(other_handlers.router)
 
     # Пропускаем накопившиеся update и запускаем polling

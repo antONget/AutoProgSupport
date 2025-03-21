@@ -93,9 +93,9 @@ async def check_pay(callback: CallbackQuery, state: FSMContext, bot: Bot):
     logging.info(f'check_pay {callback.message.chat.id}')
     payment_id = callback.data.split('_')[-1]
     summ = int(callback.data.split('_')[-2])
-    result = await yoomany_chek_payment(payment_id=payment_id)
-    if config.tg_bot.test == 'TRUE':
-        result = 'succeeded'
+    result = 'succeeded'
+    if config.tg_bot.test == 'FALSE':
+        result = await yoomany_chek_payment(payment_id=payment_id)
     if result == 'succeeded':
         await rq.update_user_balance(tg_id=callback.from_user.id, change_balance=summ)
         info_user: User = await rq.get_user_by_id(tg_id=callback.from_user.id)

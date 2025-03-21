@@ -20,13 +20,14 @@ async def keyboard_start(role: str, tg_id: int) -> ReplyKeyboardMarkup:
         button_3 = KeyboardButton(text='Баланс')
         button_4 = KeyboardButton(text='FAQ')
         button_5 = KeyboardButton(text='Личный кабинет')
+        button_6 = KeyboardButton(text='Спроси у ИИ')
         list_partner: list[Partner] = await get_partners()
         print(list_partner)
         if await check_super_admin(telegram_id=tg_id) or tg_id in list_partner:
             keyboard = ReplyKeyboardMarkup(keyboard=[[button_1], [button_2], [button_3], [button_4], [button_5]],
                                            resize_keyboard=True)
         else:
-            keyboard = ReplyKeyboardMarkup(keyboard=[[button_1], [button_2], [button_3], [button_4]],
+            keyboard = ReplyKeyboardMarkup(keyboard=[[button_1], [button_2], [button_3], [button_4], [button_6]],
                                            resize_keyboard=True)
     elif role == UserRole.admin:
         button_1 = KeyboardButton(text='Партнеры')

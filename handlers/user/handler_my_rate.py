@@ -1,13 +1,16 @@
 from aiogram import F, Router, Bot
-from aiogram.types import Message
+from aiogram.types import Message, CallbackQuery
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
+from aiogram.filters import StateFilter
 
 import keyboards.user.keyboards_rate as kb
+from keyboards.user.keyboards_my_rate import keyboard_ask_typy
 import database.requests as rq
 from database.models import Rate, Subscribe
 from utils.error_handling import error_handler
 from config_data.config import Config, load_config
+from services.openai.tg_assistant import send_message_to_openai
 
 import logging
 from datetime import datetime
@@ -19,6 +22,7 @@ router.message.filter(F.chat.type == "private")
 
 class QuestionState(StatesGroup):
     question = State()
+    question_GPT = State()
 
 
 # Персонал
@@ -28,11 +32,12 @@ async def press_button_my_rate(message: Message, state: FSMContext, bot: Bot) ->
     """
     Проверка тарифа
     :param message:
+    :param state:
     :param bot:
     :return:
     """
     logging.info(f'press_button_my_rate: {message.chat.id}')
-    await message.answer(text=f'В этом разделе вы можете задать вопрос специалистам',
+    await message.answer(text=f'В этом разделе вы можете задать свой вопрос',
                          reply_markup=kb.keyboard_main_menu())
     # проверка на наличие активной подписки
     subscribes: list[Subscribe] = await rq.get_subscribes_user(tg_id=message.from_user.id)
@@ -59,10 +64,46 @@ async def press_button_my_rate(message: Message, state: FSMContext, bot: Bot) ->
         await message.answer(text=f'<b>Ваш тариф:</b> {rate_info.title_rate}\n'
                                   f'<b>Срок подписки:</b> {last_subscribe.date_completion}\n'
                                   f'<b>Количество вопросов:</b> {last_subscribe.count_question}/{rate_info.question_rate}\n\n'
-                                  f'Пришлите описание вашей проблемы, можете добавить фото или файл 📎 .',
-                             reply_markup=None)
-                             # reply_markup=kb.keyboard_send_question())
+                                  f'Выберите кому вы бы хотели адресовать вопрос',
+                             reply_markup=keyboard_ask_typy())
+
+
+@router.callback_query(F.data.startswith('ask'))
+async def get_type_ask(callback: CallbackQuery, state: FSMContext, bot: Bot):
+    """"
+    Получаем кому адресован вопрос
+    """
+    logging.info('get_type_ask')
+    type_ask = callback.data.split('_')[-1]
+    if type_ask == 'master':
         await state.set_state(QuestionState.question)
         await state.update_data(content='')
-        # await state.update_data(count=[])
+        await callback.message.edit_text(text='Пришлите описание вашей проблемы, можете добавить фото или файл 📎 .')
         await state.update_data(task='')
+    else:
+        await callback.message.edit_text(text=f'Задай свой вопрос chatGPT')
+        await state.set_state(QuestionState.question_GPT)
+    await callback.answer()
+
+
+@router.message(StateFilter(QuestionState.question_GPT))
+@error_handler
+async def get_question_gpt(message: Message, state: FSMContext, bot: Bot):
+    """
+    Получаем вопрос
+    :param message:
+    :param state:
+    :param bot:
+    :return:
+    """
+    logging.info('get_question_gpt')
+    question_gpt = message.text
+    if question_gpt in ['Тарифы', 'Задать вопрос', 'Баланс', '/cancel']:
+        await state.set_state(state=None)
+        await message.answer(text='Диалог с GPT прерван')
+        return
+    else:
+        result = send_message_to_openai(user_id=message.from_user.id,
+                                        user_input=message.text)
+        await message.answer(text="⏳ Думаю...")
+        await message.answer(text=result)

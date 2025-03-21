@@ -114,9 +114,9 @@ async def check_pay(callback: CallbackQuery, state: FSMContext, bot: Bot):
     payment_id = callback.data.split('_')[-1]
     rate_id = callback.data.split('_')[-2]
     rate_info = await rq.get_rate_id(rate_id=int(rate_id))
-    result = await yoomany_chek_payment(payment_id=payment_id)
-    if config.tg_bot.test == 'TRUE':
-        result = True
+    result = True
+    if config.tg_bot.test == 'FALSE':
+        result = await yoomany_chek_payment(payment_id=payment_id)
     if result:
         await callback.message.delete()
         current_date = datetime.now()
