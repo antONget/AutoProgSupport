@@ -6,6 +6,7 @@ from aiogram.filters import StateFilter, or_f
 
 import keyboards.user.keyboard_send_question as kb
 from keyboards.user.keyboards_rate import keyboards_select_rate
+from keyboards.user.keyboards_my_rate import keyboard_ask_typy
 import database.requests as rq
 from database.models import User, Rate, Subscribe, Question, Dialog
 from utils.error_handling import error_handler
@@ -63,12 +64,14 @@ async def send_question(callback: CallbackQuery, state: FSMContext, bot: Bot):
         await callback.message.edit_text(text=f'Действие вашей подписки завершено, продлите подписку',
                                          reply_markup=keyboards_select_rate(list_rate=list_rates))
     else:
-        await callback.message.edit_text(text='Пришлите описание вашей проблемы, можете добавить фото или файл 📎 .',
-                                         reply_markup=None)
-        await state.set_state(QuestionState.question)
-        await state.update_data(content='')
-        # await state.update_data(count=[])
-        await state.update_data(task='')
+        # await callback.message.edit_text(text='Пришлите описание вашей проблемы, можете добавить фото или файл 📎 .',
+        #                                  reply_markup=None)
+        # await state.set_state(QuestionState.question)
+        # await state.update_data(content='')
+        # # await state.update_data(count=[])
+        # await state.update_data(task='')
+        await callback.message.edit_text(text=f'Выберите кому вы бы хотели адресовать вопрос',
+                                         reply_markup=keyboard_ask_typy())
     await callback.answer()
 
 

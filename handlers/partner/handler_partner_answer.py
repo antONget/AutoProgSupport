@@ -26,17 +26,21 @@ class StatePartner(StatesGroup):
 @error_handler
 async def partner_answer(callback: CallbackQuery, state: FSMContext, bot: Bot):
     """
-    Старт функционала работы над вопросом
-    :param callback:
+    Старт функционала работы над вопросом полученного от пользователя
+    :param callback: question_cost_{question_id}, question_reject_{question_id}
     :param bot:
     :param state:
     :return:
     """
     logging.info('send_question')
+    # получаем действие
     answer: str = callback.data.split('_')[1]
+    # id вопроса над которым совершили действие
     question_id: str = callback.data.split('_')[-1]
     await state.update_data(question_id=question_id)
+    # если действие "Указать стоимость"
     if answer == 'cost':
+        # получаем информацию о вопросе по его id
         question: Question = await rq.get_question_id(question_id=int(question_id))
         user: User = await rq.get_user_by_id(tg_id=question.tg_id)
         await callback.message.edit_text(text=f"Укажите стоимость решения вопроса №{question.id}")

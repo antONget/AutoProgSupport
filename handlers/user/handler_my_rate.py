@@ -5,7 +5,7 @@ from aiogram.fsm.state import State, StatesGroup
 from aiogram.filters import StateFilter
 
 import keyboards.user.keyboards_rate as kb
-from keyboards.user.keyboards_my_rate import keyboard_ask_typy
+from keyboards.user.keyboards_my_rate import keyboard_ask_typy, keyboard_ask_master
 import database.requests as rq
 from database.models import Rate, Subscribe
 from utils.error_handling import error_handler
@@ -81,9 +81,28 @@ async def get_type_ask(callback: CallbackQuery, state: FSMContext, bot: Bot):
         await callback.message.edit_text(text='Пришлите описание вашей проблемы, можете добавить фото или файл 📎 .')
         await state.update_data(task='')
     else:
-        await callback.message.edit_text(text=f'Задай свой вопрос chatGPT')
+        await callback.message.delete()
+        await callback.message.answer(text=f'Задай свой вопрос chatGPT',
+                                      reply_markup=keyboard_ask_master())
         await state.set_state(QuestionState.question_GPT)
     await callback.answer()
+
+
+@router.message(F.text == 'Задать вопрос специалисту')
+@error_handler
+async def press_ask_master(message: Message, state: FSMContext, bot: Bot) -> None:
+    """
+    Перевод вопроса мастеру
+    :param message:
+    :param state:
+    :param bot:
+    :return:
+    """
+    logging.info(f'press_ask_master: {message.chat.id}')
+    await state.set_state(QuestionState.question)
+    await state.update_data(content='')
+    await message.answer(text='Пришлите описание вашей проблемы, можете добавить фото или файл 📎 .')
+    await state.update_data(task='')
 
 
 @router.message(StateFilter(QuestionState.question_GPT))
@@ -103,7 +122,9 @@ async def get_question_gpt(message: Message, state: FSMContext, bot: Bot):
         await message.answer(text='Диалог с GPT прерван')
         return
     else:
+        await message.answer(text="⏳ Думаю...")
         result = send_message_to_openai(user_id=message.from_user.id,
                                         user_input=message.text)
-        await message.answer(text="⏳ Думаю...")
         await message.answer(text=result)
+
+
