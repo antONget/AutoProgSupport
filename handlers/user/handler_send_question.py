@@ -27,127 +27,127 @@ class QuestionState(StatesGroup):
     question = State()
 
 
-@router.callback_query(F.data == 'send_question')
-@error_handler
-async def send_question(callback: CallbackQuery, state: FSMContext, bot: Bot):
-    """
-    Старт функционала задания вопроса
-    :param callback:
-    :param bot:
-    :param state:
-    :return:
-    """
-    logging.info('send_question')
-    info_dialog: Dialog = await rq.get_dialog_active_tg_id(tg_id=callback.from_user.id)
-    if info_dialog:
-        await callback.message.edit_text(text='В данный момент у вас есть один не закрытый диалог для его закрытия введите команду'
-                                              ' /close_dialog',
-                                         reply_markup=None)
-        await callback.answer()
-        return
-    # проверка на наличие активной подписки
-    subscribes: list[Subscribe] = await rq.get_subscribes_user(tg_id=callback.from_user.id)
-    active_subscribe = False
-    if subscribes:
-        last_subscribe: Subscribe = subscribes[-1]
-        date_format = '%d-%m-%Y %H:%M'
-        current_date = datetime.now().strftime('%d-%m-%Y %H:%M')
-        delta_time = (datetime.strptime(current_date, date_format) -
-                      datetime.strptime(last_subscribe.date_completion, date_format))
-        rate: Rate = await rq.get_rate_id(rate_id=last_subscribe.rate_id)
-        if delta_time.days < rate.duration_rate:
-            rate: Rate = await rq.get_rate_id(rate_id=last_subscribe.rate_id)
-            if last_subscribe.count_question < rate.question_rate:
-                active_subscribe = True
-    if not subscribes or not active_subscribe:
-        list_rates: list[Rate] = await rq.get_list_rate()
-        await callback.message.edit_text(text=f'Действие вашей подписки завершено, продлите подписку',
-                                         reply_markup=keyboards_select_rate(list_rate=list_rates))
-    else:
-        # await callback.message.edit_text(text='Пришлите описание вашей проблемы, можете добавить фото или файл 📎 .',
-        #                                  reply_markup=None)
-        # await state.set_state(QuestionState.question)
-        # await state.update_data(content='')
-        # # await state.update_data(count=[])
-        # await state.update_data(task='')
-        await callback.message.edit_text(text=f'Выберите кому вы бы хотели адресовать вопрос',
-                                         reply_markup=keyboard_ask_typy())
-    await callback.answer()
+# @router.callback_query(F.data == 'send_question')
+# @error_handler
+# async def send_question(callback: CallbackQuery, state: FSMContext, bot: Bot):
+#     """
+#     Старт функционала задания вопроса
+#     :param callback:
+#     :param bot:
+#     :param state:
+#     :return:
+#     """
+#     logging.info('send_question')
+#     info_dialog: Dialog = await rq.get_dialog_active_tg_id(tg_id=callback.from_user.id)
+#     if info_dialog:
+#         await callback.message.edit_text(text='В данный момент у вас есть один не закрытый диалог для его закрытия введите команду'
+#                                               ' /close_dialog',
+#                                          reply_markup=None)
+#         await callback.answer()
+#         return
+#     # проверка на наличие активной подписки
+#     subscribes: list[Subscribe] = await rq.get_subscribes_user(tg_id=callback.from_user.id)
+#     active_subscribe = False
+#     if subscribes:
+#         last_subscribe: Subscribe = subscribes[-1]
+#         date_format = '%d-%m-%Y %H:%M'
+#         current_date = datetime.now().strftime('%d-%m-%Y %H:%M')
+#         delta_time = (datetime.strptime(current_date, date_format) -
+#                       datetime.strptime(last_subscribe.date_completion, date_format))
+#         rate: Rate = await rq.get_rate_id(rate_id=last_subscribe.rate_id)
+#         if delta_time.days < rate.duration_rate:
+#             rate: Rate = await rq.get_rate_id(rate_id=last_subscribe.rate_id)
+#             if last_subscribe.count_question < rate.question_rate:
+#                 active_subscribe = True
+#     if not subscribes or not active_subscribe:
+#         list_rates: list[Rate] = await rq.get_list_rate()
+#         await callback.message.edit_text(text=f'Действие вашей подписки завершено, продлите подписку',
+#                                          reply_markup=keyboards_select_rate(list_rate=list_rates))
+#     else:
+#         # await callback.message.edit_text(text='Пришлите описание вашей проблемы, можете добавить фото или файл 📎 .',
+#         #                                  reply_markup=None)
+#         # await state.set_state(QuestionState.question)
+#         # await state.update_data(content='')
+#         # # await state.update_data(count=[])
+#         # await state.update_data(task='')
+#         await callback.message.edit_text(text=f'Выберите кому вы бы хотели адресовать вопрос',
+#                                          reply_markup=keyboard_ask_typy())
+#     await callback.answer()
 
 
-@router.message(StateFilter(QuestionState.question), or_f(F.photo, F.text, F.document))
-@error_handler
-async def request_content_photo_text(message: Message, state: FSMContext, bot: Bot):
-    """
-    Получаем от пользователя контент для публикации
-    :param message:
-    :param state:
-    :param bot:
-    :return:
-    """
-    logging.info(f'request_content_photo_text {message.chat.id}')
-    # await asyncio.sleep(random.random())
-    # await state.update_data(content=[])
-    # await state.update_data(count=[])
-    # await state.update_data(task='')
-    data = await state.get_data()
-    # list_content = data.get('content', [])
-    # count = data.get('count', [])
-    content = data['content']
-    task = data['task']
-    if message.text:
-        # data = await state.get_data()
-        if task == '':
-            task = message.html_text
-        else:
-            task += f'\n + {message.html_text}'
-        await state.update_data(task=task)
-        # await message.edit_text(text=f'📎 Прикрепите фото или файл.\n'
-        #                              f'Добавить еще материал или отправить?',
-        #                         reply_markup=kb.keyboard_send())
-
-    elif message.photo:
-        content = f'photo!{message.photo[-1].file_id}'
-        task = data['task']
-        if message.caption:
-            if task == '':
-                task = message.caption
-            else:
-                task += f'\n{message.caption}'
-            await state.update_data(task=task)
-        await state.update_data(content=content)
-    elif message.document:
-        logging.info(f'{message.document.file_id}')
-        content = f'file!{message.document.file_id}'
-        task = data['task']
-        if message.caption:
-            if task == '':
-                task = message.caption
-            else:
-                task += f'\n{message.caption}'
-            await state.update_data(task=task)
-        await state.update_data(content=content)
-    # await state.update_data(count=count)
-    await state.set_state(state=None)
-    if content == '':
-        await message.answer(text=f'{task}\n\n'
-                                  f'📎 Прикрепите фото или файл.\n'
-                                  f'Добавить еще материал или отправить?',
-                             reply_markup=kb.keyboard_send())
-    else:
-        typy_file = content.split('!')[0]
-        if typy_file == 'photo':
-            await message.answer_photo(photo=content.split('!')[1],
-                                       caption=f'{task}\n\n'
-                                               f'📎 Прикрепите фото или файл.\n'
-                                               f'Добавить еще материал или отправить?',
-                                       reply_markup=kb.keyboard_send())
-        elif typy_file == 'file':
-            await message.answer_document(document=content.split('!')[1],
-                                          caption=f'{task}\n\n'
-                                                  f'📎 Прикрепите фото или файл.\n'
-                                                  f'Добавить еще материал или отправить?',
-                                          reply_markup=kb.keyboard_send())
+# @router.message(StateFilter(QuestionState.question), or_f(F.photo, F.text, F.document))
+# @error_handler
+# async def request_content_photo_text(message: Message, state: FSMContext, bot: Bot):
+#     """
+#     Получаем от пользователя контент для публикации
+#     :param message:
+#     :param state:
+#     :param bot:
+#     :return:
+#     """
+#     logging.info(f'request_content_photo_text {message.chat.id}')
+#     # await asyncio.sleep(random.random())
+#     # await state.update_data(content=[])
+#     # await state.update_data(count=[])
+#     # await state.update_data(task='')
+#     data = await state.get_data()
+#     # list_content = data.get('content', [])
+#     # count = data.get('count', [])
+#     content = data['content']
+#     task = data['task']
+#     if message.text:
+#         # data = await state.get_data()
+#         if task == '':
+#             task = message.html_text
+#         else:
+#             task += f'\n + {message.html_text}'
+#         await state.update_data(task=task)
+#         # await message.edit_text(text=f'📎 Прикрепите фото или файл.\n'
+#         #                              f'Добавить еще материал или отправить?',
+#         #                         reply_markup=kb.keyboard_send())
+#
+#     elif message.photo:
+#         content = f'photo!{message.photo[-1].file_id}'
+#         task = data['task']
+#         if message.caption:
+#             if task == '':
+#                 task = message.caption
+#             else:
+#                 task += f'\n{message.caption}'
+#             await state.update_data(task=task)
+#         await state.update_data(content=content)
+#     elif message.document:
+#         logging.info(f'{message.document.file_id}')
+#         content = f'file!{message.document.file_id}'
+#         task = data['task']
+#         if message.caption:
+#             if task == '':
+#                 task = message.caption
+#             else:
+#                 task += f'\n{message.caption}'
+#             await state.update_data(task=task)
+#         await state.update_data(content=content)
+#     # await state.update_data(count=count)
+#     await state.set_state(state=None)
+#     if content == '':
+#         await message.answer(text=f'{task}\n\n'
+#                                   f'📎 Прикрепите фото или файл.\n'
+#                                   f'Добавить еще материал или отправить?',
+#                              reply_markup=kb.keyboard_send())
+#     else:
+#         typy_file = content.split('!')[0]
+#         if typy_file == 'photo':
+#             await message.answer_photo(photo=content.split('!')[1],
+#                                        caption=f'{task}\n\n'
+#                                                f'📎 Прикрепите фото или файл.\n'
+#                                                f'Добавить еще материал или отправить?',
+#                                        reply_markup=kb.keyboard_send())
+#         elif typy_file == 'file':
+#             await message.answer_document(document=content.split('!')[1],
+#                                           caption=f'{task}\n\n'
+#                                                   f'📎 Прикрепите фото или файл.\n'
+#                                                   f'Добавить еще материал или отправить?',
+#                                           reply_markup=kb.keyboard_send())
 
 
 async def create_post_content(question: Question, partner: User, id_question: int, text: str, bot: Bot):

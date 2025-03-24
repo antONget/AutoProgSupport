@@ -76,18 +76,9 @@ async def partner_answer(callback: CallbackQuery, state: FSMContext, bot: Bot):
                                    text=f'{name_text} отказался от решения вопроса №{question.id}')
         # list_partner: list[User] = await rq.get_users_role(role=rq.UserRole.partner)
         # await mailing_list_partner(callback=callback, list_partner=list_partner, question_id=int(question_id), bot=bot)
-    # elif answer == 'ask':
-    #     question: Question = await rq.get_question_id(question_id=int(question_id))
-    #     await callback.message.answer(text=f'Пришлите, что вы хотите уточнить по вопросу № {question_id} у пользователя'
-    #                                        f' #_{question.tg_id}')
-        # await rq.set_question_status(question_id=int(question_id),
-        #                              status=rq.QuestionStatus.completed)
-        # await rq.set_question_completed(question_id=int(question_id), partner=callback.from_user.id)
-        # await callback.message.edit_text(text=f"Вы выполнили заказ №{question.id} и он занесен в БД",
-        #                                  reply_markup=None)
-        # await bot.send_message(chat_id=question.tg_id,
-        #                        text='Пожалуйста оцените качество решения ваше проблемы!',
-        #                        reply_markup=kb.keyboard_quality_answer(question_id=int(question_id)))
+    elif answer == 'delete':
+        await rq.set_question_status(question_id=int(question_id),
+                                     status=rq.QuestionStatus.delete)
     await callback.answer()
 
 

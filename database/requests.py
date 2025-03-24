@@ -1,5 +1,5 @@
 from database.models import User, async_session, Subscribe, Rate, Question, Executor, Dialog, WithdrawalFunds,\
-    Greeting, Partner
+    Greeting, Partner, QuestionGPT
 from sqlalchemy import select, or_, and_
 import logging
 from dataclasses import dataclass
@@ -217,6 +217,7 @@ class QuestionStatus:
     work = "work"
     cancel = "cancel"
     completed = "completed"
+    delete = "delete"
 
 
 async def add_question(data: dict) -> int:
@@ -484,7 +485,7 @@ async def update_cost_executor(question_id: int, tg_id: int, cost: int) -> None:
 
 async def set_message_id_cost_executor(question_id: int, tg_id: int, message_id_cost: int) -> None:
     """
-    Обновление номера сообщения с предложением стоимости решения
+    Обновление номера сообщения с предложением стоимости решения отправленное пользователю
     :param question_id:
     :param tg_id:
     :param message_id_cost:
@@ -501,7 +502,7 @@ async def set_message_id_cost_executor(question_id: int, tg_id: int, message_id_
 
 async def set_message_id_executor(question_id: int, tg_id: int, message_id: int) -> None:
     """
-    Обновление сообщения с вопросом отправленное пользователю
+    Обновление сообщения с вопросом после ответа о стоимости у партнера
     :param question_id:
     :param tg_id:
     :param message_id:
@@ -766,3 +767,44 @@ async def del_partner(tg_id: int) -> None:
         partner = await session.scalar(select(Partner).where(Partner.tg_id_partner == tg_id))
         await session.delete(partner)
         await session.commit()
+
+
+""" QuestionGPT """
+
+
+async def add_user_question_gpt(data: dict) -> None:
+    """
+    Добавление нового обращение к ИИ
+    :param data:
+    :return:
+    """
+    logging.info(f'add_user_question_gpt')
+    async with async_session() as session:
+        question_gpt = await session.scalar(select(QuestionGPT).where(QuestionGPT.tg_id_user == data["tg_id_user"]))
+        if not question_gpt:
+            question_gpt_ = QuestionGPT(**data)
+            session.add(question_gpt_)
+            await session.commit()
+
+
+async def update_user_question_gpt(tg_id: int) -> bool:
+    """
+    Уменьшение количества вопросов доступных к заданию ИИ
+    :param tg_id:
+    :return:
+    """
+    logging.info(f'add_user_question_gpt')
+    async with async_session() as session:
+        question_gpt: QuestionGPT = await session.scalar(select(QuestionGPT).where(QuestionGPT.tg_id_user == tg_id))
+        if question_gpt.limit_free:
+            limit_free_ = question_gpt.limit_free
+            question_gpt.limit_free = limit_free_ - 1
+            await session.commit()
+            return True
+        elif question_gpt.limit_payment:
+            limit_payment_ = question_gpt.limit_free
+            question_gpt.limit_free = limit_payment_ - 1
+            await session.commit()
+            return True
+        else:
+            return False

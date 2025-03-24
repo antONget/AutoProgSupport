@@ -84,6 +84,7 @@ class WithdrawalFunds(Base):
     summ_withdrawal_funds: Mapped[int] = mapped_column(Integer)
     data_withdrawal: Mapped[str] = mapped_column(String)
     balance_before: Mapped[int] = mapped_column(Integer)
+    requisites: Mapped[str] = mapped_column(String)
     data_confirm: Mapped[str] = mapped_column(String, default='')
     balance_after: Mapped[int] = mapped_column(Integer, default=0)
     tg_id_admin: Mapped[int] = mapped_column(BigInteger, default=0)
@@ -100,6 +101,15 @@ class Partner(Base):
     __tablename__ = 'partners'
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     tg_id_partner: Mapped[int] = mapped_column(BigInteger)
+
+
+class QuestionGPT(Base):
+    __tablename__ = 'questions_gpt'
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    tg_id_user: Mapped[int] = mapped_column(BigInteger)
+    limit_free: Mapped[int] = mapped_column(Integer, default=5)
+    limit_payment: Mapped[int] = mapped_column(Integer, default=0)
+
 
 async def async_main():
     async with engine.begin() as conn:

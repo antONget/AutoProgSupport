@@ -23,7 +23,7 @@ class GPT(StatesGroup):
     chatGPT = State()
 
 
-@router.message(F.text == 'Спроси у ИИ')
+@router.message(F.text == 'Помощник AUTO PROG')
 @error_handler
 async def press_button_gpt(message: Message, state: FSMContext, bot: Bot) -> None:
     """

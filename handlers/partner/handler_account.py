@@ -10,6 +10,7 @@ from filter.admin_filter import IsSuperAdmin
 from database import requests as rq
 from database.models import Question, Executor, User
 from utils.error_handling import error_handler
+from utils.send_admins import send_message_admins
 import logging
 from datetime import datetime, timedelta
 
@@ -121,9 +122,13 @@ async def press_request_withdrawal_funds(callback: CallbackQuery, state: FSMCont
     logging.info('press_request_withdrawal_funds')
     info_partner: User = await rq.get_user_by_id(tg_id=callback.from_user.id)
     current_balance = info_partner.balance
-    await callback.message.edit_text(text=f'Ваш текущий баланс составляет: {current_balance} ₽\n\n'
-                                          f'Введите сумму для вывода')
-    await state.set_state(StateAccount.withdrawal_funds)
+    if current_balance >= 1000:
+        await callback.message.edit_text(text=f'Ваш текущий баланс составляет: {current_balance} ₽\n\n'
+                                              f'Введите сумму для вывода не менее 1000 рублей')
+        await state.set_state(StateAccount.withdrawal_funds)
+    else:
+        await callback.message.edit_text(text=f'Ваш текущий баланс составляет: {current_balance} ₽\n\n'
+                                              f'Вывести можно не менее 1000 рублей')
 
 
 @router.message(F.text, StateFilter(StateAccount.withdrawal_funds))
@@ -142,27 +147,53 @@ async def get_withdrawal_funds(message: Message, state: FSMContext, bot: Bot):
         info_partner: User = await rq.get_user_by_id(tg_id=message.from_user.id)
         current_balance = info_partner.balance
         if int(summ_funds) < current_balance:
-            if info_partner.fullname != "none":
-                name_text = info_partner.fullname
-            else:
-                name_text = f"#_{info_partner.id}"
-            dict_withdrawal_funds = {"tg_id_partner": message.from_user.id,
-                                     "summ_withdrawal_funds": int(summ_funds),
-                                     "data_withdrawal": datetime.now().strftime('%d.%m.%Y %H:%M'),
-                                     "balance_before": current_balance}
-            id_: int = await rq.add_withdrawal_funds(data=dict_withdrawal_funds)
-            await bot.send_message(chat_id=843554518,
-                                   text=f'Партнер <a href="tg://user?id={message.from_user.id}">{name_text}</a> '
-                                        f'запросил вывод средств в размере {summ_funds}, на балансе партнера '
-                                        f'{current_balance} ₽',
-                                   reply_markup=kb.keyboard_request_withdrawal_funds(id_=id_,
-                                                                                     summ_funds=summ_funds))
-            await message.answer(text=f'Запрос на вывод средств отправлен администратору')
-            await state.set_state(state=None)
+            await state.update_data(summ_funds=int(summ_funds))
+            await message.answer(text='Пришлите реквизиты для вывода средств')
         else:
             await message.answer(text='Сумма указана не корректна, повторите ввод')
     else:
         await message.answer(text='Сумма указана не корректна, повторите ввод')
+
+
+@router.message(F.text, StateFilter(StateAccount.withdrawal_funds))
+@error_handler
+async def get_withdrawal_funds(message: Message, state: FSMContext, bot: Bot):
+    """
+    Получаем сумму для вывода средств с баланса
+    :param message:
+    :param state:
+    :param bot:
+    :return:
+    """
+    logging.info(f'get_withdrawal_funds {message.from_user.id}')
+    info_partner: User = await rq.get_user_by_id(tg_id=message.from_user.id)
+    if info_partner.fullname != "none":
+        name_text = info_partner.fullname
+    else:
+        name_text = f"#_{info_partner.id}"
+    data = await state.update_data()
+    dict_withdrawal_funds = {"tg_id_partner": message.from_user.id,
+                             "summ_withdrawal_funds": data["summ_funds"],
+                             "data_withdrawal": datetime.now().strftime('%d.%m.%Y %H:%M'),
+                             "balance_before": info_partner.balance,
+                             "requisites": message.text}
+    id_: int = await rq.add_withdrawal_funds(data=dict_withdrawal_funds)
+    await bot.send_message(chat_id=1492644981,
+                           text=f'Партнер <a href="tg://user?id={message.from_user.id}">{name_text}</a> '
+                                f'запросил вывод средств в размере {data["summ_funds"]}, на балансе партнера '
+                                f'{info_partner.balance} ₽\n'
+                                f'Реквизиты для вывода: {message.text}',
+                           reply_markup=kb.keyboard_request_withdrawal_funds(id_=id_,
+                                                                             summ_funds=data["summ_funds"]))
+    await bot.send_message(chat_id=843554518,
+                           text=f'Партнер <a href="tg://user?id={message.from_user.id}">{name_text}</a> '
+                                f'запросил вывод средств в размере {data["summ_funds"]}, на балансе партнера '
+                                f'{info_partner.balance} ₽\n'
+                                f'Реквизиты для вывода: {message.text}',
+                           reply_markup=kb.keyboard_request_withdrawal_funds(id_=id_,
+                                                                             summ_funds=data["summ_funds"]))
+    await message.answer(text=f'Запрос на вывод средств отправлен администратору')
+    await state.set_state(state=None)
 
 
 @router.callback_query(F.data == 'rating_partner')

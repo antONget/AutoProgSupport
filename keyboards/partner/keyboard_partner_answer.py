@@ -10,7 +10,6 @@ def keyboard_partner_continue_question(question_id: int) -> InlineKeyboardMarkup
     logging.info("keyboard_partner_question")
     button_1 = InlineKeyboardButton(text='Указать стоимость', callback_data=f'question_cost_{question_id}')
     button_2 = InlineKeyboardButton(text='Отказаться', callback_data=f'question_reject_{question_id}')
-    # button_3 = InlineKeyboardButton(text='Задать вопрос', callback_data=f'question_ask_{question_id}')
     keyboard = InlineKeyboardMarkup(inline_keyboard=[[button_2], [button_1]],)
     return keyboard
 

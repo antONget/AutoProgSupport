@@ -4,8 +4,8 @@ from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.filters import StateFilter
 
-from keyboards.partner import keyboards_questions as kb
-from filter.user_filter import IsRolePartner
+from keyboards.admin import keyboards_questions_delete as kb
+from filter.admin_filter import IsSuperAdmin
 from database import requests as rq
 from database.models import Question, Executor, User
 from utils.error_handling import error_handler
@@ -54,7 +54,7 @@ async def create_post_content(question: Question, partner: User, count: int, tex
                                                                                      count=count))
 
 
-@router.message(F.text == 'Вопросы', IsRolePartner())
+@router.message(F.text == 'Вопросы', IsSuperAdmin())
 @error_handler
 async def process_buttons_questions(message: Message, state: FSMContext, bot: Bot):
     """
@@ -79,7 +79,6 @@ async def process_buttons_questions(message: Message, state: FSMContext, bot: Bo
                                   bot=bot)
     else:
         await message.answer(text='Вопросов для отображения НЕТ')
-
 
 @router.callback_query(F.data.startswith('questions_back_'))
 @router.callback_query(F.data.startswith('questions_forward_'))
