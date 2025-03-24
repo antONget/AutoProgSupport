@@ -126,44 +126,44 @@ async def process_start_command_user(message: Message, state: FSMContext, bot: B
                                                                   tg_id=message.from_user.id))
 
 
-# @router.callback_query(F.data == 'change_role_admin')
-# @router.callback_query(F.data == 'change_role_partner')
-# @error_handler
-# async def change_role_admin(callback: CallbackQuery, state: FSMContext, bot: Bot):
-#     """
-#     Смена роли администратором
-#     :param callback:
-#     :param state:
-#     :param bot:
-#     :return:
-#     """
-#     logging.info('change_role_admin')
-#     list_partner: list[Partner] = await rq.get_partners()
-#     if await check_super_admin(telegram_id=callback.from_user.id):
-#         await callback.message.edit_text(text=f'Какую роль установить?',
-#                                          reply_markup=kb.keyboard_select_role_admin())
-#     elif callback.from_user.id in list_partner:
-#         await callback.message.edit_text(text=f'Какую роль установить?',
-#                                          reply_markup=kb.keyboard_select_role_partner())
-#
-#
-# @router.callback_query(F.data.startswith('select_role_'))
-# @error_handler
-# async def change_role_admin_select_role(callback: CallbackQuery, state: FSMContext, bot: Bot):
-#     """
-#     Смена роли администратором на выбранную
-#     :param callback:
-#     :param state:
-#     :param bot:
-#     :return:
-#     """
-#     logging.info('change_role_admin_select_role')
-#     await callback.message.delete()
-#     select_role = callback.data.split('_')[-1]
-#     await rq.set_user_role(tg_id=callback.from_user.id, role=select_role)
-#     await callback.message.answer(text=f'Роль {select_role.upper()} успешно установлена',
-#                                   reply_markup=await kb.keyboard_start(role=select_role, tg_id=callback.from_user.id))
-#     await process_start_command_user(message=callback.message, state=state, bot=bot)
+@router.callback_query(F.data == 'change_role_admin')
+@router.callback_query(F.data == 'change_role_partner')
+@error_handler
+async def change_role_admin(callback: CallbackQuery, state: FSMContext, bot: Bot):
+    """
+    Смена роли администратором
+    :param callback:
+    :param state:
+    :param bot:
+    :return:
+    """
+    logging.info('change_role_admin')
+    list_partner: list[Partner] = await rq.get_partners()
+    if await check_super_admin(telegram_id=callback.from_user.id):
+        await callback.message.edit_text(text=f'Какую роль установить?',
+                                         reply_markup=kb.keyboard_select_role_admin())
+    elif callback.from_user.id in list_partner:
+        await callback.message.edit_text(text=f'Какую роль установить?',
+                                         reply_markup=kb.keyboard_select_role_partner())
+
+
+@router.callback_query(F.data.startswith('select_role_'))
+@error_handler
+async def change_role_admin_select_role(callback: CallbackQuery, state: FSMContext, bot: Bot):
+    """
+    Смена роли администратором на выбранную
+    :param callback:
+    :param state:
+    :param bot:
+    :return:
+    """
+    logging.info('change_role_admin_select_role')
+    await callback.message.delete()
+    select_role = callback.data.split('_')[-1]
+    await rq.set_user_role(tg_id=callback.from_user.id, role=select_role)
+    await callback.message.answer(text=f'Роль {select_role.upper()} успешно установлена',
+                                  reply_markup=await kb.keyboard_start(role=select_role, tg_id=callback.from_user.id))
+    await process_start_command_user(message=callback.message, state=state, bot=bot)
 
 
 @router.message(F.text == '/change_greeting', IsSuperAdmin())
