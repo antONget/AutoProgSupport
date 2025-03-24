@@ -1,6 +1,6 @@
 from database.models import User, async_session, Subscribe, Rate, Question, Executor, Dialog, WithdrawalFunds,\
     Greeting, Partner, QuestionGPT
-from sqlalchemy import select, or_, and_
+from sqlalchemy import select, or_, and_, update
 import logging
 from dataclasses import dataclass
 from datetime import datetime
@@ -808,3 +808,18 @@ async def update_user_question_gpt(tg_id: int) -> bool:
             return True
         else:
             return False
+
+
+async def update_limit_free_question_gpt() -> None:
+    """
+    Обновление количество вопросов для ИИ
+    :return:
+    """
+    logging.info(f'add_user_question_gpt')
+    async with async_session() as session:
+        stmt = (
+            update(QuestionGPT)
+            .values(limit_free=5)
+        )
+        await session.execute(stmt)
+        await session.commit()

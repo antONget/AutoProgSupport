@@ -12,7 +12,8 @@ from handlers.user import handler_rates, handler_user_quality_answer, handler_se
     handler_select_partner, handler_balance, handler_FAQ, handler_neero
 from notify_admins import on_startup_notify
 from database.models import async_main
-
+from database.requests import update_limit_free_question_gpt
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
 import asyncio
 import logging
 
@@ -43,6 +44,10 @@ async def main():
     # Инициализируем бот и диспетчер
     bot = Bot(token=config.tg_bot.token, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
     dp = Dispatcher()
+    scheduler = AsyncIOScheduler(timezone="Europe/Moscow")
+    # каждый день
+    scheduler.add_job(update_limit_free_question_gpt, 'cron', hour="*")
+    scheduler.start()
     await on_startup_notify(bot=bot)
     # Регистрируем router в диспетчере
     dp.include_router(error.router)
