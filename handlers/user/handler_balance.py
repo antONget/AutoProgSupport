@@ -26,14 +26,14 @@ class StateBalance(StatesGroup):
 
 @router.message(F.text == 'Баланс')
 @error_handler
-async def press_button_rate(message: Message, bot: Bot) -> None:
+async def press_button_balance(message: Message, bot: Bot) -> None:
     """
     Проверка баланса пользователя
     :param message:
     :param bot:
     :return:
     """
-    logging.info(f'press_button_rate: {message.chat.id}')
+    logging.info(f'press_button_balance: {message.chat.id}')
     info_user: User = await rq.get_user_by_id(tg_id=message.from_user.id)
     await message.answer(text=f'Ваш баланс составляет <b>{info_user.balance}</b> рублей',
                          reply_markup=kb.keyboard_replenish_balance())
@@ -100,3 +100,5 @@ async def check_pay(callback: CallbackQuery, state: FSMContext, bot: Bot):
         await rq.update_user_balance(tg_id=callback.from_user.id, change_balance=summ)
         info_user: User = await rq.get_user_by_id(tg_id=callback.from_user.id)
         await callback.message.edit_text(text=f'Баланс успешно пополнен и составляет: {info_user.balance} рублей')
+    else:
+        await callback.message.answer(text=f'Платеж не подтвержден')
