@@ -36,22 +36,22 @@ async def create_post_content(question: Question, partner: User, count: int, tex
     if question.content_ids == '':
         msg = await bot.send_message(chat_id=partner.tg_id,
                                      text=f'{text}\n\n{question.description}',
-                                     reply_markup=kb.keyboards_select_questions(question=question,
-                                                                                count=count))
+                                     reply_markup=kb.keyboards_select_questions_delete(question=question,
+                                                                                       count=count))
     else:
         typy_file = content_id.split('!')[0]
         if typy_file == 'photo':
             msg = await bot.send_photo(chat_id=partner.tg_id,
                                        photo=content_id.split('!')[1],
                                        caption=f'{text}\n\n{question.description}',
-                                       reply_markup=kb.keyboards_select_questions(question=question,
-                                                                                  count=count))
+                                       reply_markup=kb.keyboards_select_questions_delete(question=question,
+                                                                                         count=count))
         elif typy_file == 'file':
             msg = await bot.send_document(chat_id=partner.tg_id,
                                           document=content_id.split('!')[1],
                                           caption=f'{text}\n\n{question.description}',
-                                          reply_markup=kb.keyboards_select_questions(question=question,
-                                                                                     count=count))
+                                          reply_markup=kb.keyboards_select_questions_delete(question=question,
+                                                                                            count=count))
 
 
 @router.message(F.text == 'Вопросы', IsSuperAdmin())

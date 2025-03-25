@@ -43,7 +43,10 @@ async def partner_answer(callback: CallbackQuery, state: FSMContext, bot: Bot):
         # получаем информацию о вопросе по его id
         question: Question = await rq.get_question_id(question_id=int(question_id))
         user: User = await rq.get_user_by_id(tg_id=question.tg_id)
-        await callback.message.edit_text(text=f"Укажите стоимость решения вопроса №{question.id}")
+        try:
+            await callback.message.edit_text(text=f"Укажите стоимость решения вопроса №{question.id}")
+        except:
+            await callback.message.answer(text=f"Укажите стоимость решения вопроса №{question.id}")
         await state.set_state(StatePartner.state_cost)
     # специалист нажал кнопку отказаться
     elif answer == 'reject':

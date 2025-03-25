@@ -4,7 +4,7 @@ from database.models import Question
 import logging
 
 
-def keyboards_select_questions(question: Question, count: int) -> InlineKeyboardMarkup:
+def keyboards_select_questions_delete(question: Question, count: int) -> InlineKeyboardMarkup:
     """
     Клавиатура с пагинацией для выбора вопроса
     :param question:
