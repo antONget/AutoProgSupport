@@ -24,43 +24,43 @@ class StateGreet(StatesGroup):
     greet = State()
 
 
-async def check_subscribe_user(message: Message, tg_id: int, greet_text: str):
-    """
-    Функция для проверки подписки
-    :return:
-    """
-    # проверка на наличие активной подписки
-    subscribes: list[Subscribe] = await rq.get_subscribes_user(tg_id=tg_id)
-    active_subscribe = False
-    if subscribes:
-        last_subscribe: Subscribe = subscribes[-1]
-        date_format = '%d-%m-%Y %H:%M'
-        current_date = datetime.now().strftime('%d-%m-%Y %H:%M')
-        delta_time = (datetime.strptime(current_date, date_format) -
-                      datetime.strptime(last_subscribe.date_completion, date_format))
-        rate: Rate = await rq.get_rate_id(rate_id=last_subscribe.rate_id)
-        if rate:
-            if delta_time.days < rate.duration_rate:
-                rate: Rate = await rq.get_rate_id(rate_id=last_subscribe.rate_id)
-                if last_subscribe.count_question < rate.question_rate:
-                    active_subscribe = True
-        else:
-            active_subscribe = False
-    # если нет подписок или подписки не активны
-    if not subscribes or not active_subscribe:
-        await message.answer(text=f'{greet_text}',
-                             reply_markup=await kb.keyboard_start(role=rq.UserRole.user,
-                                                                  tg_id=message.from_user.id))
-    else:
-        last_subscribe: Subscribe = subscribes[-1]
-        rate_info: Rate = await rq.get_rate_id(rate_id=last_subscribe.rate_id)
-        await message.answer(text=f'Добро пожаловать, {message.from_user.username}!\n\n'
-                                  f'<b>Ваш тариф:</b> {rate_info.title_rate}\n'
-                                  f'<b>Срок подписки:</b> {last_subscribe.date_completion}\n'
-                                  f'<b>Количество вопросов:</b> {last_subscribe.count_question}/'
-                                  f'{rate_info.question_rate}',
-                             reply_markup=await kb.keyboard_start(role=rq.UserRole.user,
-                                                                  tg_id=message.from_user.id))
+# async def check_subscribe_user(message: Message, tg_id: int, greet_text: str):
+#     """
+#     Функция для проверки подписки
+#     :return:
+#     """
+#     # проверка на наличие активной подписки
+#     subscribes: list[Subscribe] = await rq.get_subscribes_user(tg_id=tg_id)
+#     active_subscribe = False
+#     if subscribes:
+#         last_subscribe: Subscribe = subscribes[-1]
+#         date_format = '%d-%m-%Y %H:%M'
+#         current_date = datetime.now().strftime('%d-%m-%Y %H:%M')
+#         delta_time = (datetime.strptime(current_date, date_format) -
+#                       datetime.strptime(last_subscribe.date_completion, date_format))
+#         rate: Rate = await rq.get_rate_id(rate_id=last_subscribe.rate_id)
+#         if rate:
+#             if delta_time.days < rate.duration_rate:
+#                 rate: Rate = await rq.get_rate_id(rate_id=last_subscribe.rate_id)
+#                 if last_subscribe.count_question < rate.question_rate:
+#                     active_subscribe = True
+#         else:
+#             active_subscribe = False
+#     # если нет подписок или подписки не активны
+#     if not subscribes or not active_subscribe:
+#         await message.answer(text=f'{greet_text}',
+#                              reply_markup=await kb.keyboard_start(role=rq.UserRole.user,
+#                                                                   tg_id=message.from_user.id))
+#     else:
+#         last_subscribe: Subscribe = subscribes[-1]
+#         rate_info: Rate = await rq.get_rate_id(rate_id=last_subscribe.rate_id)
+#         await message.answer(text=f'Добро пожаловать, {message.from_user.username}!\n\n'
+#                                   f'<b>Ваш тариф:</b> {rate_info.title_rate}\n'
+#                                   f'<b>Срок подписки:</b> {last_subscribe.date_completion}\n'
+#                                   f'<b>Количество вопросов:</b> {last_subscribe.count_question}/'
+#                                   f'{rate_info.question_rate}',
+#                              reply_markup=await kb.keyboard_start(role=rq.UserRole.user,
+#                                                                   tg_id=message.from_user.id))
 
 
 @router.message(CommandStart())

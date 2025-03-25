@@ -25,35 +25,35 @@ class QuestionState(StatesGroup):
     question_GPT = State()
 
 
-async def check_subscribe(message: Message, tg_id: int):
-    # проверка на наличие активной подписки
-    subscribes: list[Subscribe] = await rq.get_subscribes_user(tg_id=tg_id)
-    active_subscribe = False
-    if subscribes:
-        last_subscribe: Subscribe = subscribes[-1]
-        date_format = '%d-%m-%Y %H:%M'
-        current_date = datetime.now().strftime('%d-%m-%Y %H:%M')
-        delta_time = (datetime.strptime(current_date, date_format) -
-                      datetime.strptime(last_subscribe.date_completion, date_format))
-        rate: Rate = await rq.get_rate_id(rate_id=last_subscribe.rate_id)
-        if delta_time.days < rate.duration_rate:
-            rate: Rate = await rq.get_rate_id(rate_id=last_subscribe.rate_id)
-            if last_subscribe.count_question < rate.question_rate:
-                active_subscribe = True
-    # если нет подписок или подписки не активны
-    if not subscribes or not active_subscribe:
-        list_rate: list[Rate] = await rq.get_list_rate()
-        await message.answer(text=f'У вас нет активных подписок. Выберите подходящий тариф!',
-                             reply_markup=kb.keyboards_select_rate(list_rate=list_rate))
-    else:
-        last_subscribe: Subscribe = subscribes[-1]
-        rate_info: Rate = await rq.get_rate_id(rate_id=last_subscribe.rate_id)
-        await message.answer(text=f'<b>Ваш тариф:</b> {rate_info.title_rate}\n'
-                                  f'<b>Срок подписки:</b> {last_subscribe.date_completion}\n'
-                                  f'<b>Количество вопросов:</b> {last_subscribe.count_question}/'
-                                  f'{rate_info.question_rate}\n\n'
-                                  f'Выберите кому вы бы хотели адресовать вопрос',
-                             reply_markup=keyboard_ask_typy())
+# async def check_subscribe(message: Message, tg_id: int):
+#     # проверка на наличие активной подписки
+#     subscribes: list[Subscribe] = await rq.get_subscribes_user(tg_id=tg_id)
+#     active_subscribe = False
+#     if subscribes:
+#         last_subscribe: Subscribe = subscribes[-1]
+#         date_format = '%d-%m-%Y %H:%M'
+#         current_date = datetime.now().strftime('%d-%m-%Y %H:%M')
+#         delta_time = (datetime.strptime(current_date, date_format) -
+#                       datetime.strptime(last_subscribe.date_completion, date_format))
+#         rate: Rate = await rq.get_rate_id(rate_id=last_subscribe.rate_id)
+#         if delta_time.days < rate.duration_rate:
+#             rate: Rate = await rq.get_rate_id(rate_id=last_subscribe.rate_id)
+#             if last_subscribe.count_question < rate.question_rate:
+#                 active_subscribe = True
+#     # если нет подписок или подписки не активны
+#     if not subscribes or not active_subscribe:
+#         list_rate: list[Rate] = await rq.get_list_rate()
+#         await message.answer(text=f'У вас нет активных подписок. Выберите подходящий тариф!',
+#                              reply_markup=kb.keyboards_select_rate(list_rate=list_rate))
+#     else:
+#         last_subscribe: Subscribe = subscribes[-1]
+#         rate_info: Rate = await rq.get_rate_id(rate_id=last_subscribe.rate_id)
+#         await message.answer(text=f'<b>Ваш тариф:</b> {rate_info.title_rate}\n'
+#                                   f'<b>Срок подписки:</b> {last_subscribe.date_completion}\n'
+#                                   f'<b>Количество вопросов:</b> {last_subscribe.count_question}/'
+#                                   f'{rate_info.question_rate}\n\n'
+#                                   f'Выберите кому вы бы хотели адресовать вопрос',
+#                              reply_markup=keyboard_ask_typy())
 
 
 # Персонал
