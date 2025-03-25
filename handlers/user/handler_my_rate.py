@@ -97,7 +97,7 @@ async def get_type_ask(callback: CallbackQuery, state: FSMContext, bot: Bot):
         await state.update_data(task='')
     else:
         await callback.message.delete()
-        await callback.message.answer(text=f'Задай свой вопрос chatGPT',
+        await callback.message.answer(text=f'Задай свой вопрос ИИ AUTOPROG',
                                       reply_markup=keyboard_ask_master())
         await state.set_state(QuestionState.question_GPT)
         await rq.add_user_question_gpt(data={"tg_id_user": callback.from_user.id})

@@ -34,7 +34,7 @@ async def press_button_gpt(message: Message, state: FSMContext, bot: Bot) -> Non
     :return:
     """
     logging.info(f'press_button_gpt: {message.chat.id}')
-    await message.answer(text=f'Задай свой вопрос chatGPT')
+    await message.answer(text=f'Задай свой вопрос ИИ AUTOPROG')
     await state.set_state(GPT.chatGPT)
 
 
