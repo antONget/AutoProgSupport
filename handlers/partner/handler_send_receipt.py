@@ -123,3 +123,5 @@ async def check_pay_receipt(callback: CallbackQuery, state: FSMContext, bot: Bot
         await bot.send_message(chat_id=info_question.partner_solution,
                                text=f'Пользователь #_{info_user.id} оплатил счет на сумму {amount_receipt}'
                                     f'для решения вопроса № {info_question.id}.')
+    else:
+        await callback.answer(text='Платеж не прошел')

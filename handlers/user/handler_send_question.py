@@ -165,8 +165,11 @@ async def create_post_content(question: Question, partner: User, id_question: in
     # формируем пост для рассылки
     msg = 0
     if question.content_ids == '':
-        msg = await bot.send_message(chat_id=partner.tg_id,
-                                     text=question.description)
+        try:
+            msg = await bot.send_message(chat_id=partner.tg_id,
+                                         text=question.description)
+        except:
+            pass
     else:
         typy_file = content_id.split('!')[0]
         if typy_file == 'photo':
@@ -174,12 +177,18 @@ async def create_post_content(question: Question, partner: User, id_question: in
                                        photo=content_id.split('!')[1],
                                        caption=question.description)
         elif typy_file == 'file':
-            msg = await bot.send_document(chat_id=partner.tg_id,
-                                          document=content_id.split('!')[1],
-                                          caption=question.description)
-    msg = await bot.send_message(chat_id=partner.tg_id,
-                                 text=text,
-                                 reply_markup=kb.keyboard_partner_begin_question(question_id=id_question))
+            try:
+                msg = await bot.send_document(chat_id=partner.tg_id,
+                                              document=content_id.split('!')[1],
+                                              caption=question.description)
+            except:
+                pass
+    try:
+        msg = await bot.send_message(chat_id=partner.tg_id,
+                                     text=text,
+                                     reply_markup=kb.keyboard_partner_begin_question(question_id=id_question))
+    except:
+        pass
     # else:
     #     for file_id in content_id_list:
     #         typy_file = file_id.split('!')[0]
@@ -232,6 +241,8 @@ async def mailing_list_partner(callback: CallbackQuery, list_partner: list, ques
                      f" отказаться от его решения или уточнить детали у заказчика"
             msg_1 = await create_post_content(question=question, partner=partner, id_question=question_id, text=text_1,
                                               bot=bot)
+            if not msg_1:
+                continue
             # добавляем партнера в список рассылки вопроса
             # await rq.set_question_partner(question_id=question_id,
             #                               partner_tg_id=partner.tg_id,
