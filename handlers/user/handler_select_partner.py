@@ -168,7 +168,8 @@ async def check_pay_select_partner(callback: CallbackQuery, state: FSMContext, b
             await rq.update_user_balance(tg_id=callback.from_user.id,
                                          change_balance=info_executor.cost)
             await state.update_data(id_question=id_question)
-            await rq.set_subscribe_user(tg_id=callback.from_user.id)
+            # увеличение заданного вопроса
+            # await rq.set_subscribe_user(tg_id=callback.from_user.id)
             info_user: User = await rq.get_user_by_id(tg_id=info_question.tg_id)
             info_partner: User = await rq.get_user_by_id(tg_id=info_question.partner_solution)
             await callback.message.delete()
