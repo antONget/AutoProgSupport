@@ -6,6 +6,7 @@ from aiogram.filters import StateFilter
 
 from keyboards.admin import keyboards_questions_delete as kb
 from filter.admin_filter import IsSuperAdmin
+from filter.user_filter import IsRoleAdmin
 from database import requests as rq
 from database.models import Question, Executor, User
 from utils.error_handling import error_handler
@@ -54,7 +55,7 @@ async def create_post_content(question: Question, partner: User, count: int, tex
                                                                                             count=count))
 
 
-@router.message(F.text == 'Вопросы', IsSuperAdmin())
+@router.message(F.text == 'Вопросы', IsRoleAdmin())
 @error_handler
 async def process_buttons_questions(message: Message, state: FSMContext, bot: Bot):
     """
@@ -94,7 +95,9 @@ async def back_forward_list_questions(callback: CallbackQuery, state: FSMContext
     logging.info('back_forward_list_questions')
     await callback.message.delete()
     count = int(callback.data.split('_')[-1])
-    new_count = count - 1
+    new_count = count
+    if callback.data.startswith('questions_back_'):
+        new_count = count - 1
     if callback.data.startswith('questions_forward_'):
         new_count = count + 1
     list_question: list[Question] = await rq.get_questions_cancel_create()
