@@ -13,11 +13,11 @@ def keyboards_select_questions_delete(question: Question, count: int) -> InlineK
     """
     logging.info(f'keyboards_add_partner')
     kb_builder = InlineKeyboardBuilder()
-    buttons_cancel = InlineKeyboardButton(text='Удалить вопрос', callback_data=f'question_delete_{question.id}')
+    buttons_cancel = InlineKeyboardButton(text='Удалить вопрос', callback_data=f'questionA_delete_{question.id}')
     button_back = InlineKeyboardButton(text='<<<<',
-                                       callback_data=f'questions_back_{str(count)}')
+                                       callback_data=f'questionsA_back_{str(count)}')
     button_next = InlineKeyboardButton(text='>>>>',
-                                       callback_data=f'questions_forward_{str(count)}')
+                                       callback_data=f'questionsA_forward_{str(count)}')
 
     kb_builder.row(buttons_cancel, width=1)
     kb_builder.row(button_back, button_next)

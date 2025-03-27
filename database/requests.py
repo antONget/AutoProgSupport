@@ -354,6 +354,19 @@ async def get_question_id(question_id: int) -> Question:
         return await session.scalar(select(Question).where(Question.id == question_id))
 
 
+async def delete_question_id(question_id: int) -> None:
+    """
+    Получаем вопрос по его id
+    :param question_id:
+    :return:
+    """
+    logging.info('get_question_id')
+    async with async_session() as session:
+        question = await session.scalar(select(Question).where(Question.id == question_id))
+        if question:
+            await session.delete(question)
+
+
 async def get_questions_tg_id(partner_solution: int) -> list[Question]:
     """
     Получаем список завершенных вопросов для конкретного партнера

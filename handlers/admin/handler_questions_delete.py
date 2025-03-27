@@ -70,9 +70,7 @@ async def process_buttons_questions(message: Message, state: FSMContext, bot: Bo
     if list_question:
         user_info: User = await rq.get_user_by_id(list_question[0].tg_id)
         partner_info: User = await rq.get_user_by_id(tg_id=message.from_user.id)
-        preview_text = f"Вопрос № {list_question[0].id} от пользователя #_{user_info.id}.\n" \
-                       f"Вы можете предложить стоимость решения вопроса," \
-                       f" отказаться от его решения"
+        preview_text = f"Вопрос № {list_question[0].id} от пользователя #_{user_info.id}.\n"
         await create_post_content(question=list_question[0],
                                   partner=partner_info,
                                   count=0,
@@ -81,8 +79,9 @@ async def process_buttons_questions(message: Message, state: FSMContext, bot: Bo
     else:
         await message.answer(text='Вопросов для отображения НЕТ')
 
-@router.callback_query(F.data.startswith('questions_back_'))
-@router.callback_query(F.data.startswith('questions_forward_'))
+
+@router.callback_query(F.data.startswith('questionsA_back_'))
+@router.callback_query(F.data.startswith('questionsA_forward_'))
 @error_handler
 async def back_forward_list_questions(callback: CallbackQuery, state: FSMContext, bot: Bot):
     """
@@ -119,4 +118,17 @@ async def back_forward_list_questions(callback: CallbackQuery, state: FSMContext
     await callback.answer()
 
 
-
+@router.callback_query(F.data.startswith('questionA_delete_'))
+@error_handler
+async def delete_question(callback: CallbackQuery, state: FSMContext, bot: Bot):
+    """
+    Пагинация по списку вопросов
+    :param callback: questionA_delete_{question.id}
+    :param state:
+    :param bot:
+    :return:
+    """
+    logging.info('delete_questions')
+    question_id = int(callback.data.split('_')[-1])
+    await rq.delete_question_id(question_id=question_id)
+    await callback.message.edit_text(text=f'Вопрос № {question_id} успешно удален')
