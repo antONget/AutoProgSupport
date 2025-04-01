@@ -5,10 +5,8 @@ from aiogram.fsm.state import State, StatesGroup
 from aiogram.filters import StateFilter, or_f
 
 import keyboards.user.keyboard_send_question as kb
-from keyboards.user.keyboards_rate import keyboards_select_rate
-from keyboards.user.keyboards_my_rate import keyboard_ask_typy
 import database.requests as rq
-from database.models import User, Rate, Subscribe, Question, Dialog
+from database.models import User,  Question, Dialog
 from utils.error_handling import error_handler
 
 from config_data.config import Config, load_config

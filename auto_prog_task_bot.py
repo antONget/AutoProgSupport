@@ -8,8 +8,8 @@ from handlers.admin import handler_edit_list_personal, handler_edit_list_rate, h
     handler_questions_delete
 from handlers.partner import handler_partner_answer, handler_dialog_partner, handler_report, handler_account, \
     handler_send_receipt, handler_cancel_question, handler_questions
-from handlers.user import handler_rates, handler_user_quality_answer, handler_send_question, handler_my_rate,\
-    handler_select_partner, handler_balance, handler_FAQ, handler_neero
+from handlers.user import handler_rates, handler_user_quality_answer, handler_send_question, handler_ask_master,\
+    handler_select_partner, handler_balance, handler_FAQ, handler_assistant_gpt
 from notify_admins import on_startup_notify
 from database.models import async_main
 from database.requests import update_limit_free_question_gpt
@@ -64,9 +64,10 @@ async def main():
                        handler_cancel_question.router,
                        handler_questions.router)
     dp.include_routers(handler_FAQ.router,
+                       handler_assistant_gpt.router,
                        handler_rates.router,
                        handler_balance.router,
-                       handler_my_rate.router,
+                       handler_ask_master.router,
                        handler_send_question.router,
                        handler_user_quality_answer.router,
                        handler_select_partner.router,
