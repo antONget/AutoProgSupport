@@ -96,9 +96,12 @@ async def check_pay(callback: CallbackQuery, state: FSMContext, bot: Bot):
     result = 'succeeded'
     if config.tg_bot.test == 'FALSE':
         result = await yoomany_chek_payment(payment_id=payment_id)
+    if config.tg_bot.support_id == str(callback.from_user.id):
+        result = 'succeeded'
     if result == 'succeeded':
         await rq.update_user_balance(tg_id=callback.from_user.id, change_balance=summ)
         info_user: User = await rq.get_user_by_id(tg_id=callback.from_user.id)
         await callback.message.edit_text(text=f'Баланс успешно пополнен и составляет: {info_user.balance} рублей')
     else:
         await callback.message.answer(text=f'Платеж не подтвержден')
+    await callback.answer()

@@ -873,8 +873,11 @@ async def check_date_payment(tg_id: int) -> bool:
     async with async_session() as session:
         question_gpt: QuestionGPT = await session.scalar(select(QuestionGPT).where(QuestionGPT.tg_id_user == tg_id))
         if question_gpt:
-            current_date = datetime.now()
-            if datetime.strptime(question_gpt.date_payment, "%d.%m.%Y") > current_date:
-                return True
+            if question_gpt.date_payment == 'none':
+                return False
+            else:
+                current_date = datetime.now()
+                if datetime.strptime(question_gpt.date_payment, "%d.%m.%Y") > current_date:
+                    return True
         else:
             return False

@@ -1,3 +1,5 @@
+import asyncio
+
 from aiogram import F, Router, Bot
 from aiogram.types import Message, CallbackQuery
 from aiogram.fsm.context import FSMContext
@@ -63,9 +65,9 @@ async def get_question_gpt(message: Message, state: FSMContext, bot: Bot):
         if await rq.check_limit_free(tg_id=message.from_user.id) or\
                 await rq.check_date_payment(tg_id=message.from_user.id):
             await message.answer(text="⏳ Думаю...")
-            result = send_message_to_openai(user_id=message.from_user.id,
-                                            user_input=message.text)
-            await message.answer(text=result)
+            # result = send_message_to_openai(user_id=message.from_user.id,
+            #                                 user_input=message.text)
+            # await message.answer(text=result)
         else:
             await message.answer(text='Вы исчерпали лимит вопросов для ИИ,'
                                       ' вы можете приобрести доступ к ИИ или обратиться к специалистам',
@@ -115,18 +117,18 @@ async def check_pay_gpt(callback: CallbackQuery, state: FSMContext, bot: Bot):
     if config.tg_bot.support_id == str(callback.from_user.id):
         result = True
     if result:
-        await callback.message.delete()
         period = 7
         if period_payment_gpt == 'month':
             period = 30
         date_access_free = datetime.now() + timedelta(days=period)
         date_payment = date_access_free.strftime('%d.%m.%Y')
+        await callback.message.delete()
         await rq.update_date_access_free_gpt(tg_id=callback.from_user.id,
                                              date_payment=date_payment)
         await callback.message.answer(text=f'Платеж прошел успешно',
                                       reply_markup=keyboard_main_menu())
-        await callback.message.edit_text(text=f'доступ к ИИ AUTOPROG открыт до {date_payment}',
-                                         reply_markup=keyboard_ask_typy())
+        await callback.message.answer(text=f'Доступ к ИИ AUTOPROG открыт до {date_payment}',
+                                      reply_markup=keyboard_ask_typy())
     else:
         await callback.answer(text=f'Платеж не подтвержден, если вы совершили платеж, то попробуйте проверить'
                                    f' его немного позднее или обратитесь в "Поддержку"',
