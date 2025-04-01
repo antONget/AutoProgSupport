@@ -117,7 +117,7 @@ async def quality_answer_question(callback: CallbackQuery, state: FSMContext, bo
         await rq.set_question_data_solution(question_id=question_id, data_solution=current_date)
         info_executor: Executor = await rq.get_executor(question_id=question_id,
                                                         tg_id=question.partner_solution)
-        change_balance = info_executor.cost
+        change_balance = info_executor.cost * -1
         await rq.update_user_balance(tg_id=info_executor.tg_id,
                                      change_balance=change_balance)
         await rq.set_status_executor(question_id=question_id,
@@ -137,7 +137,7 @@ async def quality_answer_question(callback: CallbackQuery, state: FSMContext, bo
                                                         tg_id=question.partner_solution)
         change_balance = info_executor.cost
         await rq.update_user_balance(tg_id=info_executor.tg_id,
-                                     change_balance=change_balance)
+                                     change_balance=change_balance * -1)
         await rq.set_status_executor(question_id=question_id,
                                      tg_id=info_executor.tg_id,
                                      status=rq.QuestionStatus.completed)
@@ -162,9 +162,9 @@ async def quality_answer_question(callback: CallbackQuery, state: FSMContext, bo
                                                 f"{partner.username}</a>")
         info_executor: Executor = await rq.get_executor(question_id=question_id,
                                                         tg_id=partner.tg_id)
-        change_balance = info_executor.cost
-        await rq.update_user_balance(tg_id=callback.from_user.id,
-                                     change_balance=change_balance)
+        # change_balance = info_executor.cost
+        # await rq.update_user_balance(tg_id=callback.from_user.id,
+        #                              change_balance=change_balance)
         await rq.set_status_executor(question_id=question_id,
                                      tg_id=info_executor.tg_id,
                                      status=rq.QuestionStatus.cancel)

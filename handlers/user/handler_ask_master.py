@@ -5,15 +5,15 @@ from aiogram.fsm.state import State, StatesGroup
 from aiogram.filters import StateFilter, or_f
 
 import keyboards.user.keyboards_rate as kb
-from keyboards.user.keyboards_my_rate import keyboard_ask_typy, keyboard_ask_master, keyboard_send
+from keyboards.user.keyboards_ask_master import keyboard_ask_typy, keyboard_ask_master, keyboard_send
 import database.requests as rq
-from database.models import Rate, Subscribe, Dialog
+from database.models import Dialog
 from utils.error_handling import error_handler
 from config_data.config import Config, load_config
 from services.openai.tg_assistant import send_message_to_openai
+from services.yoomany.quickpay import yoomany_payment, yoomany_chek_payment
 
 import logging
-from datetime import datetime
 
 config: Config = load_config()
 router = Router()
@@ -22,7 +22,6 @@ router.message.filter(F.chat.type == "private")
 
 class QuestionState(StatesGroup):
     question = State()
-    question_GPT = State()
 
 
 # async def check_subscribe(message: Message, tg_id: int):
@@ -79,8 +78,8 @@ async def press_button_ask_question(message: Message, state: FSMContext, bot: Bo
                          reply_markup=keyboard_ask_typy())
 
 
-@router.callback_query(F.data.startswith('ask'))
-async def get_type_ask(callback: CallbackQuery, state: FSMContext, bot: Bot):
+@router.callback_query(F.data == 'ask_master')
+async def ask_master(callback: CallbackQuery, state: FSMContext, bot: Bot):
     """
     Получаем кому следует адресовать вопрос
     :param callback: ask_artificial_intelligence, ask_master
@@ -88,19 +87,11 @@ async def get_type_ask(callback: CallbackQuery, state: FSMContext, bot: Bot):
     :param bot:
     :return:
     """
-    logging.info('get_type_ask')
-    type_ask = callback.data.split('_')[-1]
-    if type_ask == 'master':
-        await state.set_state(QuestionState.question)
-        await state.update_data(content='')
-        await callback.message.edit_text(text='Пришлите описание вашей проблемы, можете добавить фото или файл 📎 .')
-        await state.update_data(task='')
-    else:
-        await callback.message.delete()
-        await callback.message.answer(text=f'Задай свой вопрос ИИ AUTOPROG',
-                                      reply_markup=keyboard_ask_master())
-        await state.set_state(QuestionState.question_GPT)
-        await rq.add_user_question_gpt(data={"tg_id_user": callback.from_user.id})
+    logging.info('ask_master')
+    await state.set_state(QuestionState.question)
+    await state.update_data(content='')
+    await callback.message.edit_text(text='Пришлите описание вашей проблемы, можете добавить фото или файл 📎 .')
+    await state.update_data(task='')
     await callback.answer()
 
 
@@ -195,31 +186,3 @@ async def request_content_photo_text(message: Message, state: FSMContext, bot: B
                                                   f'📎 Прикрепите фото или файл.\n'
                                                   f'Добавить еще материал или отправить?',
                                           reply_markup=keyboard_send())
-
-
-@router.message(StateFilter(QuestionState.question_GPT))
-@error_handler
-async def get_question_gpt(message: Message, state: FSMContext, bot: Bot):
-    """
-    Получаем вопрос
-    :param message:
-    :param state:
-    :param bot:
-    :return:
-    """
-    logging.info('get_question_gpt')
-    question_gpt = message.text
-    if question_gpt in ['Тарифы', 'Задать вопрос', 'Баланс', '/cancel']:
-        await state.set_state(state=None)
-        await message.answer(text='Диалог с GPT прерван')
-        return
-    else:
-        if await rq.update_user_question_gpt(tg_id=message.from_user.id):
-            await message.answer(text="⏳ Думаю...")
-            result = send_message_to_openai(user_id=message.from_user.id,
-                                            user_input=message.text)
-            await message.answer(text=result)
-        else:
-            await message.answer(text='Вы исчерпали лимит бесплатных вопросов для ИИ,'
-                                      ' вы можете приобрести еще доступ к ИИ или обратиться к специалистам')
-

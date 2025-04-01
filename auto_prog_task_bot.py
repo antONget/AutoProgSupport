@@ -30,8 +30,8 @@ async def main():
     # Конфигурируем логирование
     logging.basicConfig(
         level=logging.INFO,
-        # filename="py_log.log",
-        # filemode='w',
+        filename="py_log.log",
+        filemode='w',
         format='%(filename)s:%(lineno)d #%(levelname)-8s '
                '[%(asctime)s] - %(name)s - %(message)s')
 
@@ -44,10 +44,10 @@ async def main():
     # Инициализируем бот и диспетчер
     bot = Bot(token=config.tg_bot.token, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
     dp = Dispatcher()
-    scheduler = AsyncIOScheduler(timezone="Europe/Moscow")
-    # каждый день
-    scheduler.add_job(update_limit_free_question_gpt, 'cron', hour="*")
-    scheduler.start()
+    # scheduler = AsyncIOScheduler(timezone="Europe/Moscow")
+    # # каждый день
+    # scheduler.add_job(update_limit_free_question_gpt, 'cron', hour="*")
+    # scheduler.start()
     await on_startup_notify(bot=bot)
     # Регистрируем router в диспетчере
     dp.include_router(error.router)

@@ -81,7 +81,7 @@ async def get_amount_receipt(message: Message, state: FSMContext, bot: Bot):
                                             f' вопроса № {info_dialog.id_question} в {amount_receipt} рублей. \n'
                                             f'На вашем балансе {info_user.balance} рублей,'
                                             f' можете списать с него сумму для оплаты счета'
-                                            f' или оплатить'
+                                            f' или оплатить.\n'
                                             f'После успешной оплаты нажмите "Продолжить"',
                                        reply_markup=keyboard_payment_receipt_balance(payment_url=quickpay_base_url,
                                                                                      payment_id=payment_id,
@@ -111,10 +111,12 @@ async def check_pay_receipt(callback: CallbackQuery, state: FSMContext, bot: Bot
     result = await yoomany_chek_payment(payment_id=payment_id)
     if config.tg_bot.test == 'TRUE' or callback.data.startswith('debited_'):
         result = True
+    if config.tg_bot.support_id == str(callback.from_user.id):
+        result = True
     if result:
         info_question: Question = await get_question_id(question_id=int(id_question))
         info_user: User = await get_user_by_id(tg_id=callback.from_user.id)
-        change_balance = amount_receipt * -1
+        change_balance = amount_receipt
         await update_user_balance(tg_id=callback.from_user.id,
                                   change_balance=change_balance)
         await callback.message.edit_text(text=f'Оплата счета на сумму {amount_receipt} для решения вопроса'
@@ -124,4 +126,4 @@ async def check_pay_receipt(callback: CallbackQuery, state: FSMContext, bot: Bot
                                text=f'Пользователь #_{info_user.id} оплатил счет на сумму {amount_receipt}'
                                     f'для решения вопроса № {info_question.id}.')
     else:
-        await callback.answer(text='Платеж не прошел')
+        await callback.answer(text='Платеж не прошел', show_alert=True)

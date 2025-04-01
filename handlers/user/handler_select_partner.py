@@ -1,12 +1,12 @@
 from aiogram import F, Router, Bot
-from aiogram.types import CallbackQuery, Message, InputMediaPhoto, FSInputFile
-from aiogram.fsm.context import FSMContext, StorageKey
+from aiogram.types import CallbackQuery, Message, FSInputFile
+from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
-from aiogram.filters import StateFilter, or_f
+from aiogram.filters import or_f
 from aiogram.types.forum_topic import ForumTopic
 
 import database.requests as rq
-from database.models import User, Rate, Subscribe, Question, Executor, Dialog
+from database.models import User, Question, Executor, Dialog
 from utils.error_handling import error_handler
 from services.yoomany.quickpay import yoomany_payment, yoomany_chek_payment
 
@@ -14,9 +14,7 @@ from keyboards.user import keyboard_select_partner as kb
 from config_data.config import Config, load_config
 
 import logging
-from datetime import datetime
-import random
-import asyncio
+
 
 config: Config = load_config()
 router = Router()
@@ -45,7 +43,7 @@ async def process_selectpartner(callback: CallbackQuery, state: FSMContext, bot:
     info_question: Question = await rq.get_question_id(question_id=int(id_question))
     info_executor: Executor = await rq.get_executor(question_id=int(id_question),
                                                     tg_id=int(tg_id_partner))
-
+    # если баланс меньше, то происходим на оплату
     if info_user.balance < info_executor.cost:
         quickpay_base_url, quickpay_redirected_url, payment_id = await yoomany_payment(amount=info_executor.cost)
         if info_partner.fullname != "none":
@@ -61,10 +59,11 @@ async def process_selectpartner(callback: CallbackQuery, state: FSMContext, bot:
                                                                           payment_id=payment_id,
                                                                           amount=info_executor.cost,
                                                                           id_question=id_question))
+    # если баланса достаточно
     else:
-        change_balance = info_executor.cost * -1
-        await rq.update_user_balance(tg_id=callback.from_user.id,
-                                     change_balance=change_balance)
+        # change_balance = info_executor.cost
+        # await rq.update_user_balance(tg_id=callback.from_user.id,
+        #                              change_balance=change_balance)
         await state.update_data(id_question=id_question)
         # await rq.set_subscribe_user(tg_id=callback.from_user.id)
         await rq.set_question_status(question_id=int(id_question),
@@ -158,6 +157,8 @@ async def check_pay_select_partner(callback: CallbackQuery, state: FSMContext, b
         id_question: str = callback.data.split('_')[-2]
         result = await yoomany_chek_payment(payment_id=payment_id)
         if config.tg_bot.test == 'TRUE':
+            result = True
+        if config.tg_bot.support_id == str(callback.from_user.id):
             result = True
         if result:
             await rq.set_question_status(question_id=int(id_question),

@@ -623,7 +623,7 @@ async def get_dialog_active_tg_id(tg_id: int) -> Dialog:
 
 async def set_dialog_active_tg_id_message(id_dialog: int, message_thread_id: int) -> None:
     """
-    Получаем активный диалог пользователя
+    Обновляем номер топика в активном диалоге
     :param id_dialog:
     :param message_thread_id
     :return:
@@ -800,7 +800,7 @@ async def add_user_question_gpt(data: dict) -> None:
             await session.commit()
 
 
-async def update_user_question_gpt(tg_id: int) -> bool:
+async def check_limit_free(tg_id: int) -> bool:
     """
     Уменьшение количества вопросов доступных к заданию ИИ
     :param tg_id:
@@ -812,11 +812,6 @@ async def update_user_question_gpt(tg_id: int) -> bool:
         if question_gpt.limit_free:
             limit_free_ = question_gpt.limit_free
             question_gpt.limit_free = limit_free_ - 1
-            await session.commit()
-            return True
-        elif question_gpt.limit_payment:
-            limit_payment_ = question_gpt.limit_free
-            question_gpt.limit_free = limit_payment_ - 1
             await session.commit()
             return True
         else:
@@ -836,3 +831,50 @@ async def update_limit_free_question_gpt() -> None:
         )
         await session.execute(stmt)
         await session.commit()
+
+
+async def update_limit_pay_question_gpt() -> None:
+    """
+    Обновление количество вопросов для ИИ
+    :return:
+    """
+    logging.info(f'add_user_question_gpt')
+    async with async_session() as session:
+        stmt = (
+            update(QuestionGPT)
+            .values(limit_payment=5)
+        )
+        await session.execute(stmt)
+        await session.commit()
+
+
+async def update_date_access_free_gpt(tg_id: int, date_payment: str) -> None:
+    """
+    Обновление даты свободного доступа к ИИ
+    :param tg_id:
+    :param date_payment:
+    :return:
+    """
+    logging.info(f'add_user_question_gpt')
+    async with async_session() as session:
+        question_gpt = await session.scalar(select(QuestionGPT).where(QuestionGPT.tg_id_user == tg_id))
+        if question_gpt:
+            question_gpt.date_payment = date_payment
+            await session.commit()
+
+
+async def check_date_payment(tg_id: int) -> bool:
+    """
+    Уменьшение количества вопросов доступных к заданию ИИ
+    :param tg_id:
+    :return:
+    """
+    logging.info(f'add_user_question_gpt')
+    async with async_session() as session:
+        question_gpt: QuestionGPT = await session.scalar(select(QuestionGPT).where(QuestionGPT.tg_id_user == tg_id))
+        if question_gpt:
+            current_date = datetime.now()
+            if datetime.strptime(question_gpt.date_payment, "%d.%m.%Y") > current_date:
+                return True
+        else:
+            return False

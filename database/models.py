@@ -108,7 +108,7 @@ class QuestionGPT(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     tg_id_user: Mapped[int] = mapped_column(BigInteger)
     limit_free: Mapped[int] = mapped_column(Integer, default=5)
-    limit_payment: Mapped[int] = mapped_column(Integer, default=0)
+    date_payment: Mapped[str] = mapped_column(Integer, default='none')
 
 
 async def async_main():
