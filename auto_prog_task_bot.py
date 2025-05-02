@@ -11,6 +11,7 @@ from handlers.partner import handler_partner_answer, handler_dialog_partner, han
 from handlers.user import handler_rates, handler_user_quality_answer, handler_send_question, handler_ask_master,\
     handler_select_partner, handler_balance, handler_FAQ, handler_assistant_gpt
 from notify_admins import on_startup_notify
+from on_shutdown import on_shutdown
 from database.models import async_main
 from database.requests import update_limit_free_question_gpt
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
@@ -30,8 +31,8 @@ async def main():
     # Конфигурируем логирование
     logging.basicConfig(
         level=logging.INFO,
-        filename="py_log.log",
-        filemode='w',
+        # filename="py_log.log",
+        # filemode='w',
         format='%(filename)s:%(lineno)d #%(levelname)-8s '
                '[%(asctime)s] - %(name)s - %(message)s')
 
@@ -48,7 +49,8 @@ async def main():
     # # каждый день
     # scheduler.add_job(update_limit_free_question_gpt, 'cron', hour="*")
     # scheduler.start()
-    await on_startup_notify(bot=bot)
+    dp.startup.register(on_startup_notify)
+    dp.shutdown.register(on_shutdown)
     # Регистрируем router в диспетчере
     dp.include_router(error.router)
     dp.include_router(start_handler.router)

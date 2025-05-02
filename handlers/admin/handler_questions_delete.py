@@ -65,7 +65,7 @@ async def process_buttons_questions(message: Message, state: FSMContext, bot: Bo
     :param bot
     :return:
     """
-    logging.info('process_buttons_questions')
+    logging.info(f'process_buttons_questions: {message.from_user.id}')
     list_question: list[Question] = await rq.get_questions_cancel_create()
     if list_question:
         user_info: User = await rq.get_user_by_id(list_question[0].tg_id)
@@ -91,13 +91,13 @@ async def back_forward_list_questions(callback: CallbackQuery, state: FSMContext
     :param bot:
     :return:
     """
-    logging.info('back_forward_list_questions')
+    logging.info(f'back_forward_list_questions:{callback.data} - {callback.from_user.id}')
     await callback.message.delete()
     count = int(callback.data.split('_')[-1])
     new_count = count
-    if callback.data.startswith('questions_back_'):
+    if callback.data.startswith('questionsA_back_'):
         new_count = count - 1
-    if callback.data.startswith('questions_forward_'):
+    if callback.data.startswith('questionsA_forward_'):
         new_count = count + 1
     list_question: list[Question] = await rq.get_questions_cancel_create()
     if len(list_question) == new_count:
@@ -107,9 +107,7 @@ async def back_forward_list_questions(callback: CallbackQuery, state: FSMContext
     question: Question = list_question[new_count]
     user_info: User = await rq.get_user_by_id(question.tg_id)
     partner_info: User = await rq.get_user_by_id(tg_id=callback.from_user.id)
-    preview_text = f"Вопрос № {question.id} от пользователя #_{user_info.id}.\n" \
-                   f"Вы можете предложить стоимость решения вопроса," \
-                   f" отказаться от его решения"
+    preview_text = f"Вопрос № {question.id} от пользователя #_{user_info.id}.\n"
     await create_post_content(question=question,
                               partner=partner_info,
                               count=new_count,
@@ -130,5 +128,8 @@ async def delete_question(callback: CallbackQuery, state: FSMContext, bot: Bot):
     """
     logging.info('delete_questions')
     question_id = int(callback.data.split('_')[-1])
+    info_question: Question = await rq.get_question_id(question_id=question_id)
     await rq.delete_question_id(question_id=question_id)
+    await bot.send_message(chat_id=info_question.tg_id,
+                           text=f'Ваш заказ №{info_question.id} удален администратором')
     await callback.message.edit_text(text=f'Вопрос № {question_id} успешно удален')

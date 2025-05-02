@@ -365,6 +365,7 @@ async def delete_question_id(question_id: int) -> None:
         question = await session.scalar(select(Question).where(Question.id == question_id))
         if question:
             await session.delete(question)
+            await session.commit()
 
 
 async def get_questions_tg_id(partner_solution: int) -> list[Question]:
@@ -388,6 +389,16 @@ async def get_questions() -> list[Question]:
     logging.info('get_question_id')
     async with async_session() as session:
         return await session.scalars(select(Question))
+
+
+async def get_questions_completed() -> list[Question]:
+    """
+    Получаем все вопросы
+    :return:
+    """
+    logging.info('get_question_id')
+    async with async_session() as session:
+        return await session.scalars(select(Question).where(Question.status == QuestionStatus.completed))
 
 
 async def get_questions_cancel_create() -> list[Question]:
@@ -817,6 +828,20 @@ async def check_limit_free(tg_id: int) -> bool:
         else:
             return False
 
+async def check_limit_free_(tg_id: int) -> bool:
+    """
+    Проверка доступности количества вопросов
+    :param tg_id:
+    :return:
+    """
+    logging.info(f'add_user_question_gpt')
+    async with async_session() as session:
+        question_gpt: QuestionGPT = await session.scalar(select(QuestionGPT).where(QuestionGPT.tg_id_user == tg_id))
+        if question_gpt.limit_free:
+            return True
+        else:
+            return False
+
 
 async def update_limit_free_question_gpt() -> None:
     """
@@ -877,7 +902,9 @@ async def check_date_payment(tg_id: int) -> bool:
                 return False
             else:
                 current_date = datetime.now()
-                if datetime.strptime(question_gpt.date_payment, "%d.%m.%Y") > current_date:
+                if datetime.strptime(question_gpt.date_payment, "%d.%m.%Y") >= current_date:
                     return True
+                else:
+                    return False
         else:
             return False

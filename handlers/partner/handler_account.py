@@ -20,6 +20,7 @@ router = Router()
 class StateAccount(StatesGroup):
     fullname = State()
     withdrawal_funds = State()
+    requesits = State()
 
 
 @router.message(F.text == 'Личный кабинет', or_f(IsSuperAdmin(), IsRolePartnerDB()))
@@ -149,23 +150,24 @@ async def get_withdrawal_funds(message: Message, state: FSMContext, bot: Bot):
         if int(summ_funds) < current_balance:
             await state.update_data(summ_funds=int(summ_funds))
             await message.answer(text='Пришлите реквизиты для вывода средств')
+            await state.set_state(StateAccount.requesits)
         else:
-            await message.answer(text='Сумма указана не корректна, повторите ввод')
+            await message.answer(text='Сумма вывода превышает ваш баланс')
     else:
         await message.answer(text='Сумма указана не корректна, повторите ввод')
 
 
-@router.message(F.text, StateFilter(StateAccount.withdrawal_funds))
+@router.message(F.text, StateFilter(StateAccount.requesits))
 @error_handler
-async def get_withdrawal_funds(message: Message, state: FSMContext, bot: Bot):
+async def get_requesits(message: Message, state: FSMContext, bot: Bot):
     """
-    Получаем сумму для вывода средств с баланса
+    Получаем реквизиты
     :param message:
     :param state:
     :param bot:
     :return:
     """
-    logging.info(f'get_withdrawal_funds {message.from_user.id}')
+    logging.info(f'get_withdrawal_funds: {message.from_user.id}')
     info_partner: User = await rq.get_user_by_id(tg_id=message.from_user.id)
     if info_partner.fullname != "none":
         name_text = info_partner.fullname
@@ -178,20 +180,26 @@ async def get_withdrawal_funds(message: Message, state: FSMContext, bot: Bot):
                              "balance_before": info_partner.balance,
                              "requisites": message.text}
     id_: int = await rq.add_withdrawal_funds(data=dict_withdrawal_funds)
-    await bot.send_message(chat_id=1492644981,
-                           text=f'Партнер <a href="tg://user?id={message.from_user.id}">{name_text}</a> '
-                                f'запросил вывод средств в размере {data["summ_funds"]}, на балансе партнера '
-                                f'{info_partner.balance} ₽\n'
-                                f'Реквизиты для вывода: {message.text}',
-                           reply_markup=kb.keyboard_request_withdrawal_funds(id_=id_,
-                                                                             summ_funds=data["summ_funds"]))
-    await bot.send_message(chat_id=843554518,
-                           text=f'Партнер <a href="tg://user?id={message.from_user.id}">{name_text}</a> '
-                                f'запросил вывод средств в размере {data["summ_funds"]}, на балансе партнера '
-                                f'{info_partner.balance} ₽\n'
-                                f'Реквизиты для вывода: {message.text}',
-                           reply_markup=kb.keyboard_request_withdrawal_funds(id_=id_,
-                                                                             summ_funds=data["summ_funds"]))
+    try:
+        await bot.send_message(chat_id=1492644981,
+                               text=f'Партнер <a href="tg://user?id={message.from_user.id}">{name_text}</a> '
+                                    f'запросил вывод средств в размере {data["summ_funds"]}, на балансе партнера '
+                                    f'{info_partner.balance} ₽\n'
+                                    f'Реквизиты для вывода: {message.text}',
+                               reply_markup=kb.keyboard_request_withdrawal_funds(id_=id_,
+                                                                                 summ_funds=data["summ_funds"]))
+    except:
+        pass
+    try:
+        await bot.send_message(chat_id=843554518,
+                               text=f'Партнер <a href="tg://user?id={message.from_user.id}">{name_text}</a> '
+                                    f'запросил вывод средств в размере {data["summ_funds"]}, на балансе партнера '
+                                    f'{info_partner.balance} ₽\n'
+                                    f'Реквизиты для вывода: {message.text}',
+                               reply_markup=kb.keyboard_request_withdrawal_funds(id_=id_,
+                                                                                 summ_funds=data["summ_funds"]))
+    except:
+        pass
     await message.answer(text=f'Запрос на вывод средств отправлен администратору')
     await state.set_state(state=None)
 

@@ -109,21 +109,25 @@ async def check_pay_receipt(callback: CallbackQuery, state: FSMContext, bot: Bot
     id_question: str = callback.data.split('_')[-2]
     amount_receipt: int = int(callback.data.split('_')[-3])
     result = await yoomany_chek_payment(payment_id=payment_id)
-    if config.tg_bot.test == 'TRUE' or callback.data.startswith('debited_'):
+    result_ = False
+    if config.tg_bot.test == 'TRUE':
         result = True
+    if callback.data.startswith('debited_'):
+        result_ = True
     if config.tg_bot.support_id == str(callback.from_user.id):
-        result = True
-    if result:
+        result_ = True
+    if result or result_:
         info_question: Question = await get_question_id(question_id=int(id_question))
         info_user: User = await get_user_by_id(tg_id=callback.from_user.id)
         change_balance = amount_receipt
-        await update_user_balance(tg_id=callback.from_user.id,
-                                  change_balance=change_balance)
+        if result:
+            await update_user_balance(tg_id=callback.from_user.id,
+                                      change_balance=change_balance)
         await callback.message.edit_text(text=f'Оплата счета на сумму {amount_receipt} для решения вопроса'
                                               f' № {info_question.id} прошла успешно.',
                                          reply_markup=None)
         await bot.send_message(chat_id=info_question.partner_solution,
-                               text=f'Пользователь #_{info_user.id} оплатил счет на сумму {amount_receipt}'
+                               text=f'Пользователь #_{info_user.id} оплатил счет на сумму {amount_receipt} '
                                     f'для решения вопроса № {info_question.id}.')
     else:
         await callback.answer(text='Платеж не прошел', show_alert=True)

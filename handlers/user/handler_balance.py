@@ -33,7 +33,7 @@ async def press_button_balance(message: Message, bot: Bot) -> None:
     :param bot:
     :return:
     """
-    logging.info(f'press_button_balance: {message.chat.id}')
+    logging.info(f'press_button_balance: {message.from_user.id}')
     info_user: User = await rq.get_user_by_id(tg_id=message.from_user.id)
     await message.answer(text=f'Ваш баланс составляет <b>{info_user.balance}</b> рублей',
                          reply_markup=kb.keyboard_replenish_balance())
@@ -49,7 +49,7 @@ async def replenish_balance(callback: CallbackQuery, state: FSMContext, bot: Bot
     :param bot:
     :return:
     """
-    logging.info('replenish_balance')
+    logging.info(f'replenish_balance:{callback.data} - {callback.from_user.id}')
     await callback.message.edit_text(text='Пришлите сумму для пополнения баланса')
     await state.set_state(StateBalance.replenish)
 
@@ -64,7 +64,7 @@ async def get_summ_replenish(message: Message, state: FSMContext, bot: Bot):
     :param bot:
     :return:
     """
-    logging.info('get_summ_replenish')
+    logging.info(f'get_summ_replenish: {message.from_user.id}')
     summ_replenish = message.text
     if summ_replenish in ['Тарифы', 'Задать вопрос', 'Баланс']:
         await state.set_state(state=None)

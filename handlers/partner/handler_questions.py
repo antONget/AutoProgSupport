@@ -64,7 +64,7 @@ async def process_buttons_questions(message: Message, state: FSMContext, bot: Bo
     :param bot
     :return:
     """
-    logging.info('process_buttons_questions')
+    logging.info(f'process_buttons_questions: {message.from_user.id}')
     list_question: list[Question] = await rq.get_questions_cancel_create()
     if list_question:
         user_info: User = await rq.get_user_by_id(list_question[0].tg_id)

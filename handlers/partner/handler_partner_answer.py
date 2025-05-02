@@ -64,11 +64,17 @@ async def partner_answer(callback: CallbackQuery, state: FSMContext, bot: Bot):
                 name_text = partner_info.fullname
             else:
                 name_text = f"Специалист #_{partner_info.id}"
-            await bot.edit_message_text(chat_id=question.tg_id,
-                                        message_id=executor.message_id_cost,
-                                        text=f'{name_text} отказался от решения вопроса'
-                                             f' №{question.id}',
-                                        reply_markup=None)
+            try:
+                await bot.edit_message_text(chat_id=question.tg_id,
+                                            message_id=executor.message_id_cost,
+                                            text=f'{name_text} отказался от решения вопроса'
+                                                 f' №{question.id}',
+                                            reply_markup=None)
+            except:
+                await bot.send_message(chat_id=question.tg_id,
+                                       text=f'{name_text} отказался от решения вопроса'
+                                            f' №{question.id}',
+                                       reply_markup=None)
             # await bot.send_message(text=f'Специалист #_{partner_info.id} отказался от решения вопроса №{question.id}')
         else:
             if partner_info.fullname != "none":

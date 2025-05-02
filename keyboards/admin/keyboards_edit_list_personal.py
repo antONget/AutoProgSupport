@@ -124,7 +124,7 @@ def keyboards_del_personal(list_admin, back, forward, count) -> InlineKeyboardMa
             callback_data=button))
     button_back = InlineKeyboardButton(text='<<<<',
                                        callback_data=f'personal_del_back_{str(back)}')
-    button_count = InlineKeyboardButton(text=f'{back+1}',
+    button_count = InlineKeyboardButton(text=f'{back+1}/{max_forward - 1}',
                                         callback_data='none')
     button_next = InlineKeyboardButton(text='>>>>',
                                        callback_data=f'personal_del_forward_{str(forward)}')

@@ -38,11 +38,15 @@ async def ask_artificial_intelligence(callback: CallbackQuery, state: FSMContext
     """
     logging.info('get_type_ask')
     await callback.message.delete()
-    await callback.message.answer(text=f'Задай свой вопрос ИИ AUTOPROG',
-                                  reply_markup=keyboard_ask_master())
-    await state.set_state(GPTState.question_GPT)
-    await rq.add_user_question_gpt(data={"tg_id_user": callback.from_user.id})
-    await callback.answer()
+    if await rq.check_limit_free_(tg_id=callback.from_user.id) or await rq.check_date_payment(tg_id=callback.from_user.id):
+        await callback.message.answer(text=f'Задай свой вопрос ИИ AUTOPROG',
+                                      reply_markup=keyboard_ask_master())
+        await state.set_state(GPTState.question_GPT)
+        await callback.answer()
+    else:
+        await callback.message.answer(text='Вы исчерпали лимит вопросов для ИИ,'
+                                           ' вы можете приобрести доступ к ИИ или обратиться к специалистам',
+                                      reply_markup=keyboard_period_gpt())
 
 
 @router.message(StateFilter(GPTState.question_GPT))
@@ -62,8 +66,8 @@ async def get_question_gpt(message: Message, state: FSMContext, bot: Bot):
         await message.answer(text='Диалог с GPT прерван')
         return
     else:
-        if await rq.check_limit_free(tg_id=message.from_user.id) or\
-                await rq.check_date_payment(tg_id=message.from_user.id):
+        if await rq.check_limit_free(tg_id=message.from_user.id) or await rq.check_date_payment(tg_id=message.from_user.id):
+            await rq.add_user_question_gpt(data={"tg_id_user": message.from_user.id})
             await message.answer(text="⏳ Думаю...")
             # result = send_message_to_openai(user_id=message.from_user.id,
             #                                 user_input=message.text)

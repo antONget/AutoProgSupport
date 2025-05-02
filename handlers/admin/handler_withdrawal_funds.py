@@ -25,7 +25,7 @@ async def process_withdrawalfunds_admin(callback: CallbackQuery, state: FSMConte
     :param bot:
     :return:
     """
-    logging.info('process_withdrawalfunds_admin')
+    logging.info(f'process_withdrawalfunds_admin:{callback.data} - {callback.from_user.id}')
     action = callback.data.split('_')[1]
     id_withdrawal_funds = int(callback.data.split('_')[-2])
     info_withdrawal_funds: WithdrawalFunds = await rq.get_withdrawal_funds_id(id_=id_withdrawal_funds)

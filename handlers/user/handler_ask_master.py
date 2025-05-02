@@ -66,7 +66,7 @@ async def press_button_ask_question(message: Message, state: FSMContext, bot: Bo
     :param bot:
     :return:
     """
-    logging.info(f'press_button_ask_question: {message.chat.id}')
+    logging.info(f'press_button_ask_question: {message.from_user.id}')
     info_dialog: Dialog = await rq.get_dialog_active_tg_id(tg_id=message.from_user.id)
     if info_dialog:
         await message.answer(text=f'У вас есть не закрытый диалог для решения вопроса №{info_dialog.id_question}, '
@@ -87,7 +87,7 @@ async def ask_master(callback: CallbackQuery, state: FSMContext, bot: Bot):
     :param bot:
     :return:
     """
-    logging.info('ask_master')
+    logging.info(f'ask_master:{callback.data} - {callback.from_user.id}')
     await state.set_state(QuestionState.question)
     await state.update_data(content='')
     await callback.message.edit_text(text='Пришлите описание вашей проблемы, можете добавить фото или файл 📎 .')

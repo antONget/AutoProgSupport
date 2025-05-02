@@ -29,7 +29,7 @@ async def process_buttons_press_report(message: Message, state: FSMContext):
     :param state:
     :return:
     """
-    logging.info('process_buttons_press_report')
+    logging.info(f'process_buttons_press_report: {message.from_user.id}')
     await state.set_state(state=None)
     calendar = aiogram_calendar.SimpleCalendar(show_alerts=True)
     calendar.set_dates_range(datetime(2015, 1, 1), datetime(2050, 12, 31))
@@ -91,7 +91,7 @@ async def process_simple_calendar_finish(callback: CallbackQuery, callback_data:
         await state.update_data(finish_period=date_finish)
         await state.set_state(state=None)
         if await check_super_admin(telegram_id=callback.from_user.id):
-            questions: list[Question] = await rq.get_questions()
+            questions: list[Question] = await rq.get_questions_completed()
         else:
             questions: list[Question] = await rq.get_questions_tg_id(partner_solution=callback.from_user.id)
         if questions:
@@ -106,9 +106,9 @@ async def process_simple_calendar_finish(callback: CallbackQuery, callback_data:
             report = {}
             for question in questions:
                 if question.date_solution:
-                    date_question = datetime(year=int(question.date_solution.split('-')[2].split()[0]),
-                                             month=int(question.date_solution.split('-')[1]),
-                                             day=int(question.date_solution.split('-')[0]))
+                    date_question = datetime(year=int(question.date_solution.split(' ')[0].split('-')[2]),
+                                             month=int(question.date_solution.split(' ')[0].split('-')[1]),
+                                             day=int(question.date_solution.split(' ')[0].split('-')[0]))
                     if start_period <= date_question <= date_finish:
                         list_questions.append(question)
                         executor: Executor = await rq.get_executor(question_id=question.id,

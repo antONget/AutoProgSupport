@@ -33,7 +33,7 @@ async def process_change_list_personal(message: Message, bot: Bot) -> None:
     :param bot:
     :return:
     """
-    logging.info(f'process_change_list_personal: {message.chat.id}')
+    logging.info(f'process_change_list_personal: {message.from_user.id}')
     try:
         await message.edit_text(text="Выберите роль которую вы хотите изменить.",
                                 reply_markup=kb.keyboard_select_role())
@@ -52,7 +52,7 @@ async def process_select_action(callback: CallbackQuery, state: FSMContext, bot:
     :param bot:
     :return:
     """
-    logging.info(f'process_add_admin: {callback.message.chat.id}')
+    logging.info(f'process_add_admin:{callback.data} {callback.from_user.id}')
     edit_role = callback.data.split('_')[2]
     role = 'партнера'
     await state.update_data(edit_role=edit_role)
@@ -71,7 +71,7 @@ async def process_personal_add(callback: CallbackQuery, state: FSMContext, bot: 
     :param bot:
     :return:
     """
-    logging.info(f'process_personal_add: {callback.message.chat.id}')
+    logging.info(f'process_personal_add:{callback.data} {callback.from_user.id}')
     role = 'партнером'
     await callback.message.edit_text(text=f'Пришлите id telegram пользователя для назначения его {role}.\n\n'
                                           f'Важно!!! Пользователь должен запустить бота.\n\n'
@@ -91,6 +91,7 @@ async def get_id_tg_personal(message: Message, state: FSMContext, bot: Bot):
     :param bot:
     :return:
     """
+    logging.info(f'get_id_tg_personal: {message.from_user.id}')
     if message.text in ['Отчет', 'Партнеры']:
         await message.answer(text='Изменение списка партнеров прервано')
         await state.set_state(state=None)
@@ -166,7 +167,7 @@ async def process_del_admin(callback: CallbackQuery, state: FSMContext, bot: Bot
     :param bot:
     :return:
     """
-    logging.info(f'process_del_admin: {callback.message.chat.id}')
+    logging.info(f'process_del_admin:{callback.data} {callback.from_user.id}')
     data = await state.get_data()
     edit_role = data['edit_role']
     role = 'партнеров'
@@ -177,7 +178,10 @@ async def process_del_admin(callback: CallbackQuery, state: FSMContext, bot: Bot
     if not list_personal:
         await callback.answer(text=f'Нет пользователей для удаления из списка {role}', show_alert=True)
         return
-    keyboard = kb.keyboards_del_personal(list_personal, 0, 2, 6)
+    keyboard = kb.keyboards_del_personal(list_admin=list_personal,
+                                         back=0,
+                                         forward=2,
+                                         count=6)
     await callback.message.edit_text(text=f'Выберите пользователя, которого нужно удалить из {role}',
                                      reply_markup=keyboard)
     await callback.answer()
@@ -193,7 +197,7 @@ async def process_forward_del_admin(callback: CallbackQuery, state: FSMContext, 
     :param bot:
     :return:
     """
-    logging.info(f'process_forward_del_admin: {callback.message.chat.id}')
+    logging.info(f'process_forward_del_admin:{callback.data} {callback.from_user.id}')
     data = await state.get_data()
     edit_role = data['edit_role']
     role = 'партнеров'
@@ -203,7 +207,10 @@ async def process_forward_del_admin(callback: CallbackQuery, state: FSMContext, 
         list_personal.append([user.tg_id, user.username])
     forward = int(callback.data.split('_')[3]) + 1
     back = forward - 2
-    keyboard = kb.keyboards_del_personal(list_personal, back, forward, 2)
+    keyboard = kb.keyboards_del_personal(list_admin=list_personal,
+                                         back=back,
+                                         forward=forward,
+                                         count=6)
     try:
         await callback.message.edit_text(text=f'Выберите пользователя, которого вы хотите удалить из {role}',
                                          reply_markup=keyboard)
@@ -222,7 +229,7 @@ async def process_back_del_admin(callback: CallbackQuery, state: FSMContext, bot
     :param bot:
     :return:
     """
-    logging.info(f'process_back_del_admin: {callback.message.chat.id}')
+    logging.info(f'process_back_del_admin:{callback.data} {callback.from_user.id}')
     data = await state.get_data()
     edit_role = data['edit_role']
     role = 'партнеров'
@@ -232,7 +239,10 @@ async def process_back_del_admin(callback: CallbackQuery, state: FSMContext, bot
         list_personal.append([user.tg_id, user.username])
     back = int(callback.data.split('_')[3]) - 1
     forward = back + 2
-    keyboard = kb.keyboards_del_personal(list_personal, back, forward, 2)
+    keyboard = kb.keyboards_del_personal(list_admin=list_personal,
+                                         back=back,
+                                         forward=forward,
+                                         count=6)
     try:
         await callback.message.edit_text(text=f'Выберите пользователя, которого вы хотите удалить из {role}',
                                          reply_markup=keyboard)

@@ -316,14 +316,15 @@ async def send_add_content(callback: CallbackQuery, state: FSMContext, bot: Bot)
         await callback.message.answer(text='Пришлите описание вашей проблемы, можете добавить фото 📎 .')
     else:
         await callback.message.edit_reply_markup(reply_markup=None)
-        await callback.message.answer(text='Материалы от вас переданы\n\n'
-                                           'Ожидайте ответа от специалистов о стоимости решения вашего вопроса',
-                                      reply_markup=None)
         data = await state.get_data()
         data_question = {"tg_id": callback.from_user.id,
                          "description": data['task'],
                          "content_ids": data['content'],
                          "status": rq.QuestionStatus.create}
         id_question: int = await rq.add_question(data=data_question)
+        await callback.message.answer(text=f'Материалы от вас переданы\n\n'
+                                           f'Вашему вопросу присвоен №{id_question}\n'
+                                           f'Ожидайте ответа от специалистов о стоимости решения вашего вопроса',
+                                      reply_markup=None)
         list_partner: list[User] = await rq.get_users_role(role=rq.UserRole.partner)
         await mailing_list_partner(callback=callback, list_partner=list_partner, question_id=id_question, bot=bot)

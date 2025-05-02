@@ -34,7 +34,7 @@ async def process_selectpartner(callback: CallbackQuery, state: FSMContext, bot:
     :param state:
     :return:
     """
-    logging.info(f'process_selectpartner {callback.data}')
+    logging.info(f'process_selectpartner:{callback.data} - {callback.from_user.id}')
     tg_id_partner: str = callback.data.split('_')[1]
     id_question: str = callback.data.split('_')[-1]
     await rq.set_question_executor(question_id=int(id_question), executor=int(tg_id_partner))
@@ -314,6 +314,10 @@ async def finish_dialog_user(message: Message, state: FSMContext, bot: Bot):
     await state.set_state(state=None)
     info_dialog: Dialog = await rq.get_dialog_active_tg_id(tg_id=message.from_user.id)
     if info_dialog:
+        info_executor: Executor = await rq.get_executor(question_id=info_dialog.id_question,
+                                                        tg_id=info_dialog.tg_id_partner)
+        await rq.update_user_balance(tg_id=info_dialog.tg_id_user,
+                                     change_balance=info_executor.cost * -1)
         if message.from_user.id == info_dialog.tg_id_user:
             partner_dialog: int = info_dialog.tg_id_partner
             id_question: str = info_dialog.id_question
